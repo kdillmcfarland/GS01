@@ -1,0 +1,278 @@
+---
+title: "Data manipulation"
+subtitle: "GS01 Calf diets"
+author: "Kim Dill-McFarland"
+date: "version `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+sessionInfo()
+```
+
+# Set seed
+```{r}
+set.seed(8325)
+```
+
+# Packages
+```{r Load packages}
+#Data manipulation
+library(tidyverse)
+```
+
+# Data
+## OTU tables
+Rows are samples, columns are OTUs, data are given in counts
+```{r message=FALSE}
+#Archaea
+OTUA = read_tsv("data/OTU_table/OTU.Arc.norm100.txt")
+
+#Bacteria
+OTUB = read_tsv("data/OTU_table/OTU.Bact.norm9000.txt")
+
+#Fungi
+OTUF = read_tsv("data/OTU_table/OTU.Fun.norm250.txt")
+```
+
+## Metadata by sample
+
+* Animal: animal ID number
+* Diet: calf starter (A), corn silage (B), mixture (C)
+* AgeGroup: 2 weeks (2w), 4 weeks (4w), 8 weeks (8w), 1 year (1yr), 2 years (2yr)
+* AgeExact: exact age in days on date of sampling
+* Daysln: natural log of exact age
+* TypeAll: feces (F), rumen liquids (L, no number for calves, 1-3 for day on repeated sampling for cows), rumen solids (S, no number for calves, 1-3 for day of consecutive sampling for cows)
+* Type: feces (F), rumen liquids (L), rumen solids (S) (simplified to not include numbers for day)
+* Sex: males (M), female (F)
+* ScourSample: Y/N if sample was taken while calf was experiencing scours
+* chao: Chao1 richness estimate
+* shannon: Shannon's diversity estimate
+* ADGKG: average daily gain in kg from 2 days of age to date of sampling
+* Gain: total weight gain in kg relative to 2 day measuremnts
+* TotalIntake: total supplement intake (g) from birth up to date of sampling
+* ill.scour: total number of days ill with scours up to date of sampling
+* ill.resp: total number of days ill with scours up to date of sampling
+* ill.ketosis: total number of days ill with ketosis up to date of sampling
+* ill.mastitis: total number of days ill with mastitis up to date of sampling
+* ill.all: total number of days ill (any recorded illness) up to date of sampling
+* MPE: milk production efficiency (energy corrected milk [ECM] / dry matter intake [DMI]) (kg/kg DMI)
+* Effic: total energy output efficiency (MJ/kg DMI)
+    
+```{r message=FALSE}
+#Archaea
+metaA = read_tsv("data/metadata/Met.Arc.txt", col_types = list(Animal = col_character()))
+
+#Bacteria
+metaB = read_tsv("data/metadata/Met.Bact.txt", col_types = list(Animal = col_character()))
+
+#Fungi
+metaF = read_tsv("data/metadata/Met.Fun.txt", col_types = list(Animal = col_character()))
+```
+
+## Supplement intake
+
+* Animal: animal ID number
+* Diet: calf starter (A), corn silage (B), mixture (C)
+* Day: age in days
+* Intake: supplement intake in g (feed offered - feed refused)
+
+```{r message=FALSE}
+intake = read_tsv("data/metadata/feed_intake.txt", col_types = list(Animal = col_character()))
+```
+
+## SCOA in mM
+
+Rows are samples, columns are short chain organic acids (SCOAs), data are given as concentrations (mM). ETOH = ethanol, iVal.2MB = isovalerate + 2-methylbutyrate
+
+```{r message=FALSE}
+SCOA = read_tsv("data/SCOA/SCOA.txt")
+```
+
+## VFA in mF
+
+Rows are samples, columns are volatile fatty acids (VFas), data are given as concentrations (mM) or molar fractions (mF), **except**
+
+* Diet: calf starter (A), corn silage (B), mixture (C)
+* AgeGroup: 8 weeks (8w), 1 year (1yr), 2 years (2yr)
+* TypeAll: (L, no number for calves, 1-3 for day on repeated sampling for cows)
+
+isoval_2MB = isovalerate + 2-methylbutyrate, branch = isobutyrate + isovalerate + 2-methylbutyrate
+
+```{r message=FALSE}
+VFA = read_tsv("data/SCOA/VFA_mF.txt")
+```
+
+## Weight
+
+* Animal: animal ID number
+* Diet: calf starter (A), corn silage (B), mixture (C)
+* AgeExact: exact age in days on date of weighing
+* Wt: weight in kg
+* Age_norm: AgeExact - 2 in order to normalize to number of days ellapsed since first weighing at 2 days of age
+* Wt_norm: weight gained since day 2
+
+```{r message=FALSE}
+weight = read_tsv("data/metadata/weight_gain.txt", col_types = list(Animal = col_character()))
+```
+
+# Add Diet + Age variable
+```{r}
+#Archaea
+metaA$DietAge = as.factor(paste(metaA$Diet, metaA$AgeGroup, sep=""))
+
+#Bacteria
+metaB$DietAge = as.factor(paste(metaB$Diet, metaB$AgeGroup, sep=""))
+
+#Fungi
+metaF$DietAge = as.factor(paste(metaF$Diet, metaF$AgeGroup, sep=""))
+```
+
+# Average consecutive 1 & 2yr samples
+To remove animal effects in some analyses, average the data from 1 and 2 year samples taken across 3 consecutive days.
+
+## OTU tables
+**Archaea**
+```{r}
+OTUAave = metaA %>%
+  # Merge OTU with metadata needed for grouping 3 day replicates in OTU data
+  select(Sample, Animal, AgeGroup, Type) %>% 
+  right_join(OTUA, by="Sample") %>%
+  # average 3 day replicates for 1 and 2 yr rumen samples
+  group_by(Animal, AgeGroup, Type) %>% 
+  summarize_if(is.numeric, funs(mean)) %>%
+  # round to whole numbers
+  mutate_if(is.numeric, funs(round(., 0))) %>% 
+  ungroup() %>% 
+  # recreate Sample name as row name
+  mutate(Sample = paste(Animal, AgeGroup, sep=".")) %>% 
+  mutate(Sample = paste(Sample, Type, sep=".")) %>% 
+  select(-Animal, -AgeGroup, -Type)
+```
+
+**Bacteria**
+```{r eval=FALSE}
+OTUBave = metaB %>%
+  # Merge OTU with metadata needed for grouping 3 day replicates in OTU data
+  select(Sample, Animal, AgeGroup, Type) %>% 
+  right_join(OTUB, by="Sample") %>%
+  # average 3 day replicates for 1 and 2 yr rumen samples
+  group_by(Animal, AgeGroup, Type) %>% 
+  summarize_if(is.numeric, funs(mean)) %>%
+  # round to whole numbers
+  mutate_if(is.numeric, funs(round(., 0))) %>% 
+  ungroup() %>% 
+  # recreate Sample name as row name
+  mutate(Sample = paste(Animal, AgeGroup, sep=".")) %>% 
+  mutate(Sample = paste(Sample, Type, sep=".")) %>% 
+  select(-Animal, -AgeGroup, -Type)
+```
+
+```{r echo=FALSE, eval=FALSE}
+# Write resulting table for bacteria
+write.table(OTUBave, file="data/OTU_table/OTUBave.txt", sep="\t")
+```
+
+```{r message=FALSE, echo=FALSE}
+# Read in resulting table for bacteria as-rerunning clean-up is lengthy
+OTUBave = read.table("data/OTU_table/OTUBave.txt", sep="\t", header=TRUE, row.names=1)
+```
+
+**Fungi**
+```{r}
+OTUFave = metaF %>%
+  # Merge OTU with metadata needed for grouping 3 day replicates in OTU data
+  select(Sample, Animal, AgeGroup, Type) %>% 
+  right_join(OTUF, by="Sample") %>%
+  select(-Sample) %>% 
+  # average 3 day replicates for 1 and 2 yr rumen samples
+  group_by(Animal, AgeGroup, Type) %>% 
+  summarize_if(is.numeric, funs(mean)) %>%
+  # round to whole numbers
+  mutate_if(is.numeric, funs(round(., 0))) %>% 
+  ungroup() %>% 
+  # recreate Sample name as row name
+  mutate(Sample = paste(Animal, AgeGroup, sep=".")) %>% 
+  mutate(Sample = paste(Sample, Type, sep=".")) %>% 
+  select(-Animal, -AgeGroup, -Type)
+```
+
+## Metadata by sample
+**Archaea**
+```{r}
+metaAave = metaA %>%
+  # average 3 day replicates for 1 and 2 yr rumen samples
+  group_by(Animal, AgeGroup, Type, Diet) %>% 
+  summarize_if(is.numeric, funs(mean)) %>%
+  ungroup() %>% 
+  # recreate Sample name as row name
+  mutate(Sample = paste(Animal, AgeGroup, sep=".")) %>% 
+  mutate(Sample = paste(Sample, Type, sep="."))
+```
+
+**Bacteria**
+```{r}
+metaBave = metaB %>%
+  # average 3 day replicates for 1 and 2 yr rumen samples
+  group_by(Animal, AgeGroup, Type, Diet) %>% 
+  summarize_if(is.numeric, funs(mean)) %>%
+  ungroup() %>% 
+  # recreate Sample name as row name
+  mutate(Sample = paste(Animal, AgeGroup, sep=".")) %>% 
+  mutate(Sample = paste(Sample, Type, sep="."))
+```
+
+**Fungi**
+```{r}
+metaFave = metaF %>%
+  # average 3 day replicates for 1 and 2 yr rumen samples
+  group_by(Animal, AgeGroup, Type, Diet) %>% 
+  summarize_if(is.numeric, funs(mean)) %>%
+  ungroup() %>% 
+  # recreate Sample name as row name
+  mutate(Sample = paste(Animal, AgeGroup, sep=".")) %>% 
+  mutate(Sample = paste(Sample, Type, sep="."))
+```
+
+## SCOA data
+```{r}
+SCOAave = SCOA %>%
+  #Add Type column (L only)
+  mutate(Type="L") %>% 
+  dplyr::select(-Sample, -TypeAll) %>% 
+  # average 3 day replicates for 1 and 2 yr rumen samples
+  group_by(Animal, AgeGroup, Type, Diet) %>% 
+  summarize_all(funs(mean)) %>%
+  ungroup() %>% 
+  # recreate Sample name as row name
+  mutate(Sample = paste(Animal, AgeGroup, sep=".")) %>% 
+  mutate(Sample = paste(Sample, Type, sep=".")) %>% 
+  select(-Animal, -AgeGroup, -Type)
+```
+
+## VFA data
+```{r}
+VFAave = VFA %>%
+  #Add Type column (L only)
+  mutate(Type="L") %>% 
+  dplyr::select(-Sample, -TypeAll) %>% 
+  # average 3 day replicates for 1 and 2 yr rumen samples
+  group_by(Animal, AgeGroup, Type, Diet) %>% 
+  summarize_all(funs(mean)) %>%
+  ungroup() %>% 
+  # recreate Sample name as row name
+  mutate(Sample = paste(Animal, AgeGroup, sep=".")) %>% 
+  mutate(Sample = paste(Sample, Type, sep=".")) %>% 
+  select(-Animal, -AgeGroup, -Type)
+```
+
+# Save environment
+```{r}
+save.image("GS01.data.RData")
+```

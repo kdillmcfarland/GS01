@@ -1,0 +1,539 @@
+---
+title: "Alpha-diversity analyses"
+subtitle: "GS01 Calf diets"
+author: "Kim Dill-McFarland"
+date: "version `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+editor_options: 
+  chunk_output_type: console
+---
+<script>
+$(document).ready(function() {
+  $items = $('div#TOC li');
+  $items.each(function(idx) {
+    num_ul = $(this).parentsUntil('#TOC').length;
+    $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+  });
+});
+</script>
+
+# Load data
+Created in `1_data_manip.Rmd`
+```{r}
+set.seed(8325)
+load("GS01.data.RData")
+```
+
+# Packages
+```{r Load packages}
+#Data manipulation
+library(tidyverse)
+```
+
+# Model 1: Diet and age
+Diet * AgeGroup
+
+* ANOVA followed by pairwise TukeyHSD if significant
+
+## Archaea
+### Fecal
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaA %>%
+  filter(Type == "F") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaA %>%
+  filter(Type == "F") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaA %>%
+  filter(Type == "F") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaA %>%
+  filter(Type == "F") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+### Rumen liquids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaA %>%
+  filter(Type == "L") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaA %>%
+  filter(Type == "L") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaA %>%
+  filter(Type == "L") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaA %>%
+  filter(Type == "L") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+### Rumen solids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaA %>%
+  filter(Type == "S") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaA %>%
+  filter(Type == "S") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaA %>%
+  filter(Type == "S") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaA %>%
+  filter(Type == "S") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+## Bacteria
+### Fecal
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaB %>%
+  filter(Type == "F") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaB %>%
+  filter(Type == "F") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaB %>%
+  filter(Type == "F") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaB %>%
+  filter(Type == "F") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+### Rumen liquids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaB %>%
+  filter(Type == "L") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaB %>%
+  filter(Type == "L") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaB %>%
+  filter(Type == "L") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaB %>%
+  filter(Type == "L") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+### Rumen solids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaB %>%
+  filter(Type == "S") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaB %>%
+  filter(Type == "S") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaB %>%
+  filter(Type == "S") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaB %>%
+  filter(Type == "S") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+## Fungi
+### Fecal
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaF %>%
+  filter(Type == "F") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaF %>%
+  filter(Type == "F") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaF %>%
+  filter(Type == "F") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaF %>%
+  filter(Type == "F") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+### Rumen liquids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaF %>%
+  filter(Type == "L") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaF %>%
+  filter(Type == "L") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaF %>%
+  filter(Type == "L") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaF %>%
+  filter(Type == "L") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+### Rumen solids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaF %>%
+  filter(Type == "S") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaF %>%
+  filter(Type == "S") %>% 
+  aov(shannon ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaF %>%
+  filter(Type == "S") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  summary()
+```
+
+**TukeyHSD**
+```{r}
+metaF %>%
+  filter(Type == "S") %>% 
+  aov(chao ~ Diet*AgeGroup, .) %>% 
+  TukeyHSD()
+```
+
+# Model 2: Milk production efficiency
+2yr samples only, averaged 3 consecutive rumen samples to avoid animal effects  
+Effic + MPE
+
+* ANOVA followed by pairwise TukeyHSD if significant
+
+## Archaea
+### Fecal
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaAave %>%
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  aov(shannon ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaAave %>%
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  aov(chao ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+### Rumen liquids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaAave %>%
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  aov(shannon ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaAave %>%
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  aov(chao ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+### Rumen solids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaAave %>%
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  aov(shannon ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaAave %>%
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  aov(chao ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+## Bacteria
+### Fecal
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaBave %>%
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  aov(shannon ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaBave %>%
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  aov(chao ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+### Rumen liquids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaBave %>%
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  aov(shannon ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaBave %>%
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  aov(chao ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+### Rumen solids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaBave %>%
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  aov(shannon ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaBave %>%
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  aov(chao ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+## Fungi
+### Fecal
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaFave %>%
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  aov(shannon ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaFave %>%
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  aov(chao ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+### Rumen liquids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaFave %>%
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  aov(shannon ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaFave %>%
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  aov(chao ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+### Rumen solids
+#### Shannon's diversity
+**ANOVA**
+```{r}
+metaFave %>%
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  aov(shannon ~ Effic+MPE, .) %>% 
+  summary()
+```
+
+#### Chao richness
+**ANOVA**
+```{r}
+metaFave %>%
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  aov(chao ~ Effic+MPE, .) %>% 
+  summary()
+```

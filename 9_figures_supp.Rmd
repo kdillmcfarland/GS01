@@ -1,0 +1,289 @@
+---
+title: "Supplemental figures 1-3"
+subtitle: "GS01 Calf diets"
+author: "Kim Dill-McFarland"
+date: "version `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+editor_options: 
+  chunk_output_type: console
+---
+<script>
+$(document).ready(function() {
+  $items = $('div#TOC li');
+  $items.each(function(idx) {
+    num_ul = $(this).parentsUntil('#TOC').length;
+    $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+  });
+});
+</script>
+
+# Load data
+Created in `1_data_manip.Rmd`
+```{r}
+set.seed(8325)
+load("GS01.data.RData")
+```
+
+# Packages
+```{r Load packages}
+#Beta-diversity analyses and plots
+library(vegan)
+#Data manipulation
+library(tidyverse)
+# Plots
+library(ggthemes)
+#library(RColorBrewer)
+library(cowplot)
+# HSD significance letters
+library(agricolae)
+```
+
+# Figure S1
+Supplement intake (g/day) by diet from birth to weaning.
+
+## Define colors
+```{r}
+col_vec_diet = c("#7c590a", "#36a8e0", "#42871e")
+```
+
+## A. Raw supplement intake
+```{r}
+intake_plot = ggplot(intake, aes(x = Day, y = Intake, 
+                   color = factor(Diet, c("A","C","B")),
+                   shape=factor(Diet, c("A","C","B")))) + 
+  geom_point() + 
+  scale_shape(solid=FALSE, labels=c("Starter","Mix","Silage")) +
+  scale_color_manual(values=col_vec_diet, labels=c("Starter","Mix","Silage")) +
+  
+  theme_base() +
+  labs(x="Age (days)", y="Feed intake (g)")  +
+  guides(color=guide_legend(title=""), shape=guide_legend(title=""))
+```
+
+## B. Log supplement intake
+```{r}
+log_intake_plot = intake %>% 
+  dplyr::filter(Intake >0) %>% 
+  
+ggplot(aes(x = Day, y = log(Intake), 
+                   color = factor(Diet, c("A","C","B")),
+                   shape=factor(Diet, c("A","C","B")))) + 
+  geom_point() + 
+  geom_smooth(method = "lm") +
+  scale_shape(solid=FALSE, labels=c("Starter","Mix","Silage")) +
+  scale_color_manual(values=col_vec_diet, labels=c("Starter","Mix","Silage")) +
+  
+  theme_base() +
+  labs(x="Age (days)", y="Log feed intake")  +
+  guides(color=guide_legend(title=""), shape=guide_legend(title=""))
+```
+
+## Full plot
+```{r warning=FALSE}
+figS1 = plot_grid(intake_plot, log_intake_plot, ncol=1)
+figS1
+```
+
+```{r}
+save_plot("figures/figureS1.pdf", figS1,  base_height = 9, base_aspect_ratio = 1.2)
+```
+
+# Figure S2
+Diversity of fecal and ruminal microbiota in cows raised on different diets.
+
+## Define colors
+```{r}
+col_vec_age = c("#c9314c", "#f7894f", "#fddc88", "#72c7a4", "#4969ae")
+```
+
+## Merge data
+```{r}
+all.chao = metaA %>% 
+  select(Sample, chao) %>% 
+  rename(Arc=chao) %>% 
+  
+  full_join(metaF, by="Sample") %>% 
+  select(Sample, Arc, chao) %>% 
+  rename(Fun=chao) %>% 
+  
+  full_join(metaB, by="Sample") %>% 
+  select(Sample, AgeGroup, Type, Arc, Fun, chao) %>% 
+  rename(Bac=chao) %>% 
+  
+  gather(key="amplicon", value="chao", Arc:Bac)
+```
+
+## Full plot
+```{r warning=FALSE}
+chao_plot = all.chao %>% 
+
+ggplot() +
+  geom_boxplot(aes(
+    x=factor(AgeGroup, c("2w","4w","8w","1yr","2yr")), 
+    y=chao, 
+    fill=factor(AgeGroup, c("2w","4w","8w","1yr","2yr")))) +
+  
+  scale_fill_manual(values = col_vec_age) +
+  theme_base() +
+  guides(fill=FALSE) +
+  labs(x="", y="") +
+  theme(plot.margin = margin(0.5,0.5,0,0, "cm")) +
+  
+  facet_wrap(amplicon~Type, scales="free")
+
+chao_plot
+```
+
+```{r warning=FALSE}
+save_plot("figures/figureS2.pdf", chao_plot,  base_height = 9, base_aspect_ratio = 0.9)
+```
+
+## Determine significance letters
+**Archaea**
+```{r}
+metaA %>% 
+  mutate(group=paste(AgeGroup, Type, sep="_")) %>% 
+  aov(chao~group, .) %>% 
+  HSD.test("group", group=TRUE) %>% 
+  .[["groups"]]
+```
+
+**Bacteria**
+```{r}
+metaB %>% 
+  mutate(group=paste(AgeGroup, Type, sep="_")) %>% 
+  aov(chao~group, .) %>% 
+  HSD.test("group", group=TRUE) %>% 
+  .[["groups"]]
+```
+
+**Fungi**
+```{r}
+metaF %>% 
+  mutate(group=paste(AgeGroup, Type, sep="_")) %>% 
+  aov(chao~group, .) %>% 
+  HSD.test("group", group=TRUE) %>% 
+  .[["groups"]]
+```
+
+# Figure S3
+SCOA mM and mF by age and diet
+
+## Define colors
+```{r}
+col_vec_age2 = c(rep("#fddc88",3), rep("#72c7a4",3), rep("#4969ae",3))
+```
+
+## Merge data
+```{r warning=FALSE}
+all.SCOA = SCOA %>% 
+  select(-Animal, -Diet, -AgeGroup, -TypeAll) %>% 
+  full_join(VFA, by = "Sample") %>% 
+  
+  rename(VFA_mM = VFA_total_mM) %>% 
+  
+  gather(key="key", value="value", c(Succinate:Caproate, VFA_mM:branch_mF)) %>% 
+  
+  mutate(group=key) %>% 
+  separate(group, c("substrate", "units"), sep="_", fill="right") %>% 
+  mutate(units = replace(units, is.na(units), "mM")) %>% 
+  mutate(group = paste(AgeGroup, Diet, sep="")) %>% 
+  mutate(group_ord = factor(group, c("8wA","8wC","8wB",
+                                 "1yrA","1yrC","1yrB",
+                                 "2yrA","2yrC","2yrB")))
+```
+
+## A. Concentration (mM)
+```{r}
+mM_plot = all.SCOA %>% 
+  dplyr::filter(units == "mM") %>% 
+  
+  ggplot() +
+  geom_boxplot(aes(x=group_ord, y=value, fill=group_ord)) +
+  scale_fill_manual(values = col_vec_age2) +
+  theme_base() +
+  guides(fill=FALSE) +
+  labs(x="", y="") +
+  theme(plot.margin = margin(0.5,0.5,0,0, "cm")) +
+  
+  facet_wrap(units~substrate, ncol=3, scales="free_y")
+```
+
+## B. Molar fraction (mF)
+```{r}
+mF_plot = all.SCOA %>% 
+  dplyr::filter(units == "mF") %>% 
+  
+  ggplot() +
+  geom_boxplot(aes(x=group_ord, y=value, fill=group_ord)) +
+  scale_fill_manual(values = col_vec_age2) +
+  theme_base() +
+  guides(fill=FALSE) +
+  labs(x="", y="") +
+  theme(plot.margin = margin(0.5,0.5,0,0, "cm")) +
+  
+  facet_wrap(units~substrate, ncol=3, scales="free_y")
+```
+
+## Full plot
+```{r}
+figS3 = plot_grid(mM_plot, mF_plot, ncol=1, rel_heights = c(2,1))
+figS3
+```
+
+```{r}
+save_plot("figures/figureS3.pdf", figS3,  base_height = 20, base_aspect_ratio = 0.5)
+```
+
+## Determine significance letters
+### Function
+```{r}
+SCOA_letters = function(dat, vars, unit){
+  require(tidyverse)
+  require(agricolae)
+  
+  for(i in 1:length(vars)){
+      test = dat %>% 
+      dplyr::filter(substrate==vars[[i]] &
+                    units==unit) %>% 
+      aov(value~group, .) %>% 
+      HSD.test("group", group=TRUE)
+    
+      letters = test$groups %>% 
+        rownames_to_column() %>% 
+        mutate(substrate=vars[[i]], units=unit)
+    
+  write.table(letters, file="figures/SCOA_letters.txt", append=TRUE, sep="\t", col.names = FALSE, row.names = FALSE)
+    }
+  
+  y=read.table("figures/SCOA_letters.txt", header=FALSE, sep="\t", fill = TRUE)
+  file.remove("figures/SCOA_letters.txt")
+  colnames(y) = c("level", "value", "group", "substrate", "units")
+  write.table(y, file="figures/SCOA_letters.txt", sep="\t", row.names = FALSE)
+}
+```
+
+### Concentration  (mM)
+```{r}
+SCOA_letters(all.SCOA, vars=c("Acetate", "Butyrate", "ETOH", "Formate", "Isobutyrate", "iVal.2MB", "Lactate", "Propionate", "Succinate", "Valerate", "VFA"), unit="mM")
+```
+
+### Molar fraction  (mF)
+```{r}
+SCOA_letters(all.SCOA, vars=c("Acetate", "branch", "Butyrate", "Propionate", "Valerate"), unit="mF")
+```
+
+## Combine all
+```{r}
+letters = read.table("figures/SCOA_letters.txt", sep="\t", header=TRUE) %>% 
+  filter(level != "level") %>% 
+  select(-value) %>% 
+  spread(key=level, value=group) %>% 
+  write.table("figures/SCOA_letters_wide.txt", sep="\t")
+```
+

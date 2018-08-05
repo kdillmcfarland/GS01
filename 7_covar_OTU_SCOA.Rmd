@@ -1,0 +1,366 @@
+---
+title: "Co-variance of OTUs and SCOAs"
+subtitle: "GS01 Calf diets"
+author: "Kim Dill-McFarland"
+date: "version `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+editor_options: 
+  chunk_output_type: console
+---
+<script>
+$(document).ready(function() {
+  $items = $('div#TOC li');
+  $items.each(function(idx) {
+    num_ul = $(this).parentsUntil('#TOC').length;
+    $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+  });
+});
+</script>
+
+# Load data
+Created in `1_data_manip.Rmd`
+```{r}
+set.seed(8325)
+load("GS01.data.RData")
+```
+
+# Packages
+```{r Load packages}
+#Beta-diversity analyses and plots
+library(vegan)
+#Data manipulation
+library(tidyverse)
+```
+
+# Overall co-variation
+Co-variation of the microbiota with SCOAs in rumen liquids was tested using Mantel tests for dissimilarity matrices.
+
+Remove metadata from SCOA data to facilitate matrix calculations.
+```{r}
+SCOA.temp = SCOA %>%
+  select(-Sample, -Diet, -AgeGroup, -TypeAll)
+```
+
+## Archaea
+Subset data
+```{r}
+meta.temp = metaA %>%
+  filter(Type == "L")
+```
+
+```{r}
+OTU.temp = metaA %>%
+  select(Sample, Type) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUA, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**Mantel**
+```{r}
+mantel(
+  vegdist(OTU.temp, method="bray"),
+  vegdist(SCOA.temp, method="bray"),
+  method="kendall", strata=meta.temp$AgeGroup, permutations=100)
+```
+
+## Bacteria
+Subset data
+```{r}
+meta.temp = metaB %>%
+  filter(Type == "L")
+```
+
+```{r}
+OTU.temp = metaB %>%
+  select(Sample, Type) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUB, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**Mantel**
+```{r}
+mantel(
+  vegdist(OTU.temp, method="bray"),
+  vegdist(SCOA.temp, method="bray"),
+  method="kendall", strata=meta.temp$AgeGroup, permutations=100)
+```
+
+## Fungi
+Subset data
+```{r}
+meta.temp = metaF %>%
+  filter(Type == "L")
+```
+
+```{r}
+OTU.temp = metaF %>%
+  select(Sample, Type) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUF, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**Mantel**
+```{r}
+mantel(
+  vegdist(OTU.temp, method="bray"),
+  vegdist(SCOA.temp, method="bray"),
+  method="kendall", strata=meta.temp$AgeGroup, permutations=100)
+```
+
+# Specific SCOAs and OTUs
+
+* Correlate OTUs to SCOAs with Kendall’s correlations
+* OTUs at least 0.05% relative abundance in one or more samples
+* Averaged 3 consecutive rumen samples to avoid animal effects
+* Rumen liquid samples only
+* Strong correlations considered as <-0.7 or >0.7
+
+Remove metadata from SCOA data to facilitate matrix calculations. Merge with mF VFA data
+```{r}
+SCOA.temp = SCOAave %>%
+  full_join(VFAave, by="Sample") %>% 
+  select(-Sample, -Diet.x, -Diet.y)
+```
+
+## Archaea
+Subset data
+```{r}
+OTU.temp = metaAave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUAave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**Kendall's correlation**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, SCOA.temp, method="kendall"), sep="\t", file="results/Kendall_SCOA/A.L.OTUs.txt")
+```
+
+## Bacteria
+Subset data
+```{r}
+OTU.temp = metaBave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUBave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**Kendall's correlation**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, SCOA.temp, method="kendall"), sep="\t", file="results/Kendall_SCOA/B.L.OTUs.txt")
+```
+
+## Fungi
+Subset data
+```{r}
+OTU.temp = metaFave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUFave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**Kendall's correlation**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, SCOA.temp, method="kendall"), sep="\t", file="results/Kendall_SCOA/F.L.OTUs.txt")
+```
+
+# Specific calf SCOAs and OTUs
+
+* Correlate OTUs to SCOAs present **only at 8 weeks** with Kendall’s correlations
+    + Ethanol and lactate
+* OTUs at least 0.05% relative abundance in one or more samples
+* Averaged 3 consecutive rumen samples to avoid animal effects
+* Rumen liquid samples only
+* Strong correlations considered as <-0.7 or >0.7
+
+Remove metadata from SCOA data to facilitate matrix calculations. Merge with mF VFA data
+```{r}
+SCOA.temp = SCOAave %>%
+  full_join(VFAave, by="Sample") %>% 
+  filter(grepl("8w", Sample)) %>% 
+  select(-Sample, -Diet.x, -Diet.y) %>% 
+  select(ETOH, Lactate)
+```
+
+## Archaea
+Subset data
+```{r}
+OTU.temp = metaAave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "L" & AgeGroup == "8w") %>% 
+  left_join(OTUAave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**Kendall's correlation**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, SCOA.temp, method="kendall"), sep="\t", file="results/Kendall_SCOA/A.L.OTUs8w.txt")
+```
+
+## Bacteria
+Subset data
+```{r}
+OTU.temp = metaBave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "L" & AgeGroup == "8w") %>% 
+  left_join(OTUBave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**Kendall's correlation**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, SCOA.temp, method="kendall"), sep="\t", file="results/Kendall_SCOA/B.L.OTUs8w.txt")
+```
+
+## Fungi
+Subset data
+```{r}
+OTU.temp = metaFave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "L" & AgeGroup == "8w") %>% 
+  left_join(OTUFave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**Kendall's correlation**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, SCOA.temp, method="kendall"), sep="\t", file="results/Kendall_SCOA/F.L.OTUs8w.txt")
+```
+
+## Determine strong correlations
+Read in Kendall results tables
+```{r}
+{# Set working directory for results files
+  require(plyr)
+  setwd("results/Kendall_SCOA/")
+# List all Kruskal results files
+file_list = list.files()
+
+  # Read in all files and merge into 1 data frame
+for(file in file_list){
+  # if the merged dataset doesn't exist, create it
+  if (!exists("Kendall_SCOA_results")){
+    # Read in 1st dataset
+    Kendall_SCOA_results = read.table(file, header=TRUE, row.names=NULL, sep="\t")
+  # Add file name to data column to identify origin
+    Kendall_SCOA_results$origin = file
+  }
+   
+  # if the merged dataset does exist, append to it
+  if (exists("Kendall_SCOA_results")){
+    # Read in additional dataset
+    temp_dataset =  read.table(file, header=TRUE, row.names=NULL, sep="\t")
+    # Add file name to data column to identify origin
+    temp_dataset$origin = file
+    # Merge datasets
+    Kendall_SCOA_results<-rbind.fill(Kendall_SCOA_results, temp_dataset)
+    # Remove original additional dataset
+    rm(temp_dataset)
+  }
+}
+# Return working directory to main project directory
+setwd("../..")
+}
+```
+
+Select strong correlations <-0.7 or >0.7.
+```{r}
+Kendall_SCOA_select = Kendall_SCOA_results %>% 
+  dplyr::rename(OTU=row.names) %>% 
+  gather(key="SCOA", value="Kendall", Succinate:branch_mF) %>% 
+  dplyr::filter(Kendall <= -0.7 | Kendall >=0.7) %>% 
+  separate(origin, c("amplicon", "Type", "variable", "filetype"), by=".")
+```
+
+## Determine maximum relative abundances of OTUs.  
+### Archaea
+```{r}
+OTUA_abund = metaA %>%
+  select(Sample, Animal, AgeGroup, Type) %>% 
+  # Merge with OTU tables
+  left_join(OTUA, by="Sample") %>% 
+  # Use only 2 year samples
+  filter(AgeGroup %in% c("8w","1yr","2yr")) %>% 
+  # Convert to percent relative abundance
+  gather(key = OTU, value = count, -Sample, -Animal, -AgeGroup, -Type) %>% 
+  group_by(Sample) %>%
+  mutate(percent = count / sum(count) * 100) %>%
+
+  # Find maximum abundance for each OTU
+  group_by(OTU, Type) %>% 
+  dplyr::summarize(max_perc = max(percent)) %>% 
+
+  # Add column of amplicon type for later merging with other OTU tables
+  mutate(amplicon="A")
+```
+
+### Bacteria
+```{r}
+OTUB_abund = metaB %>%
+  select(Sample, Animal, AgeGroup, Type) %>% 
+  # Merge with OTU tables
+  left_join(OTUB, by="Sample") %>% 
+  # Use only 2 year samples
+  filter(AgeGroup %in% c("8w","1yr","2yr"))  %>% 
+  # Convert to percent relative abundance
+  gather(key = OTU, value = count, -Sample, -Animal, -AgeGroup, -Type) %>% 
+  group_by(Sample) %>%
+  mutate(percent = count / sum(count) * 100) %>%
+
+  # Find maximum abundance for each OTU
+  group_by(OTU, Type) %>% 
+  dplyr::summarize(max_perc = max(percent)) %>% 
+
+  # Add column of amplicon type for later merging with other OTU tables
+  mutate(amplicon="B")
+```
+
+### Fungi 
+```{r}
+OTUF_abund = metaF %>%
+  select(Sample, Animal, AgeGroup, Type) %>% 
+  # Merge with OTU tables
+  left_join(OTUF, by="Sample") %>% 
+  # Use only 2 year samples
+  filter(AgeGroup %in% c("8w","1yr","2yr"))  %>% 
+  # Convert to percent relative abundance
+  gather(key = OTU, value = count, -Sample, -Animal, -AgeGroup, -Type) %>% 
+  group_by(Sample) %>%
+  mutate(percent = count / sum(count) * 100) %>%
+
+  # Find maximum abundance for each OTU
+  group_by(OTU, Type) %>% 
+  dplyr::summarize(max_perc = max(percent)) %>% 
+
+  # Add column of amplicon type for later merging with other OTU tables
+  mutate(amplicon="F")
+```
+
+### Combine all
+```{r}
+OTU_abund = rbind(OTUA_abund, OTUB_abund)
+OTU_abund = rbind(OTU_abund, OTUF_abund)
+```
+
+## Add abundance to strong correlations
+```{r}
+Kendall_SCOA_select_abund = Kendall_SCOA_select %>% 
+  left_join(OTU_abund, by=c("OTU", "amplicon", "Type")) %>% 
+  distinct()
+```
+
+Print significant results table.
+```{r}
+write.table(Kendall_SCOA_select_abund, file="results/Kendall_SCOA_significant.txt", sep="\t", row.names=FALSE)
+```

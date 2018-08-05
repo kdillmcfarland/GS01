@@ -1,0 +1,99 @@
+---
+title: "Animal metric analyses"
+subtitle: "GS01 Calf diets"
+author: "Kim Dill-McFarland"
+date: "version `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+editor_options: 
+  chunk_output_type: console
+---
+<script>
+$(document).ready(function() {
+  $items = $('div#TOC li');
+  $items.each(function(idx) {
+    num_ul = $(this).parentsUntil('#TOC').length;
+    $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+  });
+});
+</script>
+
+# Load data
+Created in `1_data_manip.Rmd`
+```{r}
+set.seed(8325)
+load("GS01.data.RData")
+```
+
+# Packages
+```{r Load packages}
+#Data manipulation
+library(tidyverse)
+#Repeated measure linear models
+library(lme4)
+library(lmerTest)
+```
+
+# Supplement intake
+Repeated measures linear model of log supplement intake over time.
+```{r}
+#Remove 0s since will break log transformation
+intake[intake == 0] <- NA
+
+#Repeated measures
+anova(lmer(log(Intake) ~ Diet + (1+Day|Animal), data=intake))
+```
+
+# Weight gain
+## Model 1: Diet and age
+Age_norm + Age_norm:Diet + (0+Age_norm|Animal)
+
+* Repeated measure linear model weight gain over time
+* Relative to day 2
+    - Wt_norm = weight - weight at 2 days
+    - Age_norm = age in days - 2
+* Separate models for calfs (0-8 wk) and cows (8 wk - 2 yrs) as growth occurs more rapidly in young animals.
+
+### Calves
+```{r warning=FALSE}
+summary(lmer(Wt_norm ~ Age_norm + Age_norm:Diet + (0+Age_norm|Animal), data = weight[weight$Age_norm<100,]))
+
+anova(lmer(Wt_norm ~ Age_norm + Age_norm:Diet + (0+Age_norm|Animal), data = weight[weight$Age_norm<100,]))
+```
+
+### Cows
+```{r warning=FALSE}
+summary(lmer(Wt_norm ~ Age_norm + Age_norm:Diet + (0+Age_norm|Animal), data = weight[weight$Age_norm>100,]))
+
+anova(lmer(Wt_norm ~ Age_norm + Age_norm:Diet + (0+Age_norm|Animal), data = weight[weight$Age_norm>100,]))
+```
+
+# Production metrics
+## Model 4: Diet only
+Diet
+
+* ANOVA
+
+### Milk production efficiency (MPE)
+Energy-corrected milk (ECM) production per kg dry matter intake (DMI).
+
+```{r}
+metaBave %>% 
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  aov(MPE ~ Diet, .) %>% 
+  summary()
+```
+
+### Overall energy efficiency
+Efficiency was defined as total energy output (MJ) of the five energetic demands (*i.e.* ECM, weight maintenance, weight change, gestation, mastitis) per kg of DMI.
+
+```{r}
+metaBave %>% 
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  aov(Effic ~ Diet, .) %>% 
+  summary()
+```

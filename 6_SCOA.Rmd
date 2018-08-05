@@ -1,0 +1,325 @@
+---
+title: "SCOA analyses"
+subtitle: "GS01 Calf diets"
+author: "Kim Dill-McFarland"
+date: "version `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+editor_options: 
+  chunk_output_type: console
+---
+<script>
+$(document).ready(function() {
+  $items = $('div#TOC li');
+  $items.each(function(idx) {
+    num_ul = $(this).parentsUntil('#TOC').length;
+    $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+  });
+});
+</script>
+
+# Load data
+Created in `1_data_manip.Rmd`
+```{r}
+set.seed(8325)
+load("GS01.data.RData")
+```
+
+# Packages
+```{r}
+#Beta-diversity analyses and plots
+library(vegan)
+#Data manipulation
+library(tidyverse)
+```
+
+# Functions
+```{r}
+source("functions/Pairwise_adonis.R")
+```
+
+# Beta-diversity
+## Model 1: Diet and age
+Rumen liquid samples only  
+Diet * AgeGroup + Random
+
+* Permutational ANOVA (PERMANOVA) followed by pairwise PERMANOVA with FDR correction (Benjamini-Hochberg method) if significant
+
+Subset data
+```{r}
+meta.temp = metaB %>%
+  filter(Type == "L") %>% 
+  arrange(Sample)
+```
+
+```{r}
+SCOA.temp = SCOA %>%
+  arrange(Sample) %>% 
+  select(Succinate:Caproate) 
+```
+
+**PERMANOVA**
+Bray-Curtis (structure)
+```{r}
+adonis(SCOA.temp ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r}
+pairwise.adonis(SCOA.temp, meta.temp$Diet, "bray", "fdr")
+```
+
+```{r}
+pairwise.adonis(SCOA.temp, meta.temp$AgeGroup, "bray", "fdr")
+```
+
+```{r}
+pairwise.adonis(SCOA.temp, meta.temp$DietAge, "bray", "fdr")
+```
+
+Jaccard (composition)
+```{r}
+adonis(SCOA.temp ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r}
+pairwise.adonis(SCOA.temp, meta.temp$Diet, "jaccard", "fdr")
+```
+
+```{r}
+pairwise.adonis(SCOA.temp, meta.temp$AgeGroup, "jaccard", "fdr")
+```
+
+```{r}
+pairwise.adonis(SCOA.temp, meta.temp$DietAge, "jaccard", "fdr")
+```
+
+## Model 2: Milk production efficiency
+2yr rumen liquid samples only, averaged 3 consecutive rumen samples to avoid animal effects  
+Effic + MPE + Random
+
+* Permutational ANOVA (PERMANOVA) followed by pairwise PERMANOVA with FDR correction (Benjamini-Hochberg method) if significant
+
+Subset data
+```{r}
+meta.temp = metaB %>%
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  arrange(Sample)
+```
+
+```{r}
+SCOA.temp = SCOA %>%
+  filter(AgeGroup == "2yr") %>% 
+  arrange(Sample) %>% 
+  select(Succinate:Caproate) 
+```
+
+**PERMANOVA**
+Bray-Curtis (structure)
+```{r}
+adonis(SCOA.temp ~ Effic + MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(SCOA.temp ~ Effic + MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+# Specific SCOAs (mM and mF)
+## Model 1: Diet and age
+Diet * AgeGroup + Random
+
+* ANOVAs with a Benjamini-Hochberg correction for multiple comparisons and pairwise between groups with TukeyHSD if significant 
+* Concentraions and molar fractions tested separately
+
+### Total VFA
+acetate + propionate + isobutyrate + butyrate, isovalerate + 2-methylbutyrate + valerate
+
+**Concentration**
+```{r}
+summary(aov(VFA_total_mM ~ Diet*AgeGroup, data=VFA))
+```
+
+```{r}
+TukeyHSD(aov(VFA_total_mM ~ Diet*AgeGroup, data=VFA))
+```
+
+### Total branched
+isobutyrate + isovalerate + 2-methylbutyrate
+
+**Concentration**
+```{r}
+summary(aov(branch_mM ~ Diet*AgeGroup, data=VFA))
+```
+
+```{r}
+TukeyHSD(aov(branch_mM ~ Diet*AgeGroup, data=VFA))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(branch_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+```{r}
+TukeyHSD(aov(branch_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+### Acetate
+**Concentration**
+```{r}
+summary(aov(Acetate ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(Acetate ~ Diet*AgeGroup, data=SCOA))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(Acetate_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+```{r}
+TukeyHSD(aov(Acetate_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+### Butyrate
+**Concentration**
+```{r}
+summary(aov(Butyrate ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(Butyrate ~ Diet*AgeGroup, data=SCOA))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(Butyrate_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+```{r}
+TukeyHSD(aov(Butyrate_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+### Ethanol
+**Concentration**
+```{r}
+summary(aov(ETOH ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(ETOH ~ Diet*AgeGroup, data=SCOA))
+```
+
+### Formate
+**Concentration**
+```{r}
+summary(aov(Formate ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(Formate ~ Diet*AgeGroup, data=SCOA))
+```
+
+### Isobutyrate
+**Concentration**
+```{r}
+summary(aov(Isobutyrate ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(Isobutyrate ~ Diet*AgeGroup, data=SCOA))
+```
+
+### Isovalerate + 2-methylbutyrate
+**Concentration**
+```{r}
+summary(aov(iVal.2MB ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(iVal.2MB ~ Diet*AgeGroup, data=SCOA))
+```
+
+### Lactate
+**Concentration**
+```{r}
+summary(aov(Lactate ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(Lactate ~ Diet*AgeGroup, data=SCOA))
+```
+
+### Propionate
+**Concentration**
+```{r}
+summary(aov(Propionate ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(Propionate ~ Diet*AgeGroup, data=SCOA))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(Propionate_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+```{r}
+TukeyHSD(aov(Propionate_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+### Succinate
+**Concentration**
+```{r}
+summary(aov(Succinate ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(Succinate ~ Diet*AgeGroup, data=SCOA))
+```
+
+### Valerate
+**Concentration**
+```{r}
+summary(aov(Valerate ~ Diet*AgeGroup, data=SCOA))
+```
+
+```{r}
+TukeyHSD(aov(Valerate ~ Diet*AgeGroup, data=SCOA))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(Valerate_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+```{r}
+TukeyHSD(aov(Valerate_mF ~ Diet*AgeGroup, data=VFA))
+```
+
+### mM FDR correction
+```{r}
+#Diet
+p.adjust(c(0.0125,0.00155,0.0788,0.41144,0.000158,0.00307,0.108,0.191,0.29548,0.63975,0.0217), method="fdr")
+#AgeGroup
+p.adjust(c(2E-16,2E-16,2E-16,0.02177,6.72E-10,2E-16,7.71E-11,2E-16,0.00379,0.47069,2E-16), method="fdr")
+#Diet:AgeGroup
+p.adjust(c(0.0000133,4.29E-08,0.000000898,0.00253,0.093772,0.25592,1.54E-09,3.21E-10,0.00123,0.00357,3.06E-11), method="fdr")
+```
+
+### mF FDR  correction
+```{r}
+#Diet
+p.adjust(c(0.6317,0.537,0.58757,0.92762,0.1835), method="fdr")
+#AgeGroup
+p.adjust(c(4.43E-12,0.00000127,0.00203,1.24E-11,2E-16), method="fdr")
+#Diet:AgeGroup
+p.adjust(c(0.0506,0.101,0.49988,0.00031,0.0257), method="fdr")
+```

@@ -1,0 +1,424 @@
+---
+title: "Figures 1-4"
+subtitle: "GS01 Calf diets"
+author: "Kim Dill-McFarland"
+date: "version `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+editor_options: 
+  chunk_output_type: console
+---
+<script>
+$(document).ready(function() {
+  $items = $('div#TOC li');
+  $items.each(function(idx) {
+    num_ul = $(this).parentsUntil('#TOC').length;
+    $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+  });
+});
+</script>
+
+# Load data
+Created in `1_data_manip.Rmd`
+```{r}
+set.seed(8325)
+load("GS01.data.RData")
+```
+
+# Packages
+```{r Load packages}
+#Beta-diversity analyses and plots
+library(vegan)
+#Data manipulation
+library(tidyverse)
+# Plots
+library(ggthemes)
+library(RColorBrewer)
+library(cowplot)
+# HSD significance letters
+library(agricolae)
+```
+
+# Figure 1
+Total fecal and ruminal microbiota in dairy cows raised on different diets. 
+
+## Define colors
+```{r}
+myPalette = colorRampPalette(brewer.pal(11, "Spectral"))
+```
+
+## Calculate nmds
+**Archaea**
+```{r results=FALSE}
+AFnmds = OTUA %>% 
+  dplyr::filter(grepl(".F", Sample)) %>% 
+  select(-Sample) %>% 
+  metaMDS(distance="bray", k=2, trymax=1000) %>% 
+  scores(display="sites") %>% 
+  as.data.frame()
+AFnmds = OTUA %>% 
+  dplyr::filter(grepl(".F", Sample)) %>% 
+  select(Sample) %>% 
+  cbind(AFnmds) %>% 
+  mutate(amplicon="Arc")
+
+ALnmds = OTUA %>% 
+  dplyr::filter(grepl(".L", Sample)) %>% 
+  select(-Sample) %>% 
+  metaMDS(distance="bray", k=2, trymax=1000) %>% 
+  scores(display="sites") %>% 
+  as.data.frame()
+ALnmds = OTUA %>% 
+  dplyr::filter(grepl(".L", Sample)) %>% 
+  select(Sample) %>% 
+  cbind(ALnmds) %>% 
+  mutate(amplicon="Arc")
+
+ASnmds = OTUA %>% 
+  dplyr::filter(grepl(".S", Sample)) %>% 
+  select(-Sample) %>% 
+  metaMDS(distance="bray", k=2, trymax=1000) %>% 
+  scores(display="sites") %>% 
+  as.data.frame()
+ASnmds = OTUA %>% 
+  dplyr::filter(grepl(".S", Sample)) %>% 
+  select(Sample) %>% 
+  cbind(ASnmds) %>% 
+  mutate(amplicon="Arc")
+```
+
+**Bacteria**
+```{r results=FALSE}
+BFnmds = OTUB %>% 
+  dplyr::filter(grepl(".F", Sample)) %>% 
+  select(-Sample) %>% 
+  metaMDS(distance="bray", k=2, trymax=1000) %>% 
+  scores(display="sites") %>% 
+  as.data.frame()
+BFnmds = OTUB %>% 
+  dplyr::filter(grepl(".F", Sample)) %>% 
+  select(Sample) %>% 
+  cbind(BFnmds) %>% 
+  mutate(amplicon="Bac")
+
+BLnmds = OTUB %>% 
+  dplyr::filter(grepl(".L", Sample)) %>% 
+  select(-Sample) %>% 
+  metaMDS(distance="bray", k=2, trymax=1000) %>% 
+  scores(display="sites") %>% 
+  as.data.frame()
+BLnmds = OTUB %>% 
+  dplyr::filter(grepl(".L", Sample)) %>% 
+  select(Sample) %>% 
+  cbind(BLnmds) %>% 
+  mutate(amplicon="Bac")
+
+BSnmds = OTUB %>% 
+  dplyr::filter(grepl(".S", Sample)) %>% 
+  select(-Sample) %>% 
+  metaMDS(distance="bray", k=2, trymax=1000) %>% 
+  scores(display="sites") %>% 
+  as.data.frame()
+BSnmds = OTUB %>% 
+  dplyr::filter(grepl(".S", Sample)) %>% 
+  select(Sample) %>% 
+  cbind(BSnmds) %>% 
+  mutate(amplicon="Bac")
+```
+
+**Fungi**
+```{r results=FALSE}
+FFnmds = OTUF %>% 
+  dplyr::filter(grepl(".F", Sample)) %>% 
+  select(-Sample) %>% 
+  metaMDS(distance="bray", k=2, trymax=1000) %>% 
+  scores(display="sites") %>% 
+  as.data.frame()
+FFnmds = OTUF %>% 
+  dplyr::filter(grepl(".F", Sample)) %>% 
+  select(Sample) %>% 
+  cbind(FFnmds) %>% 
+  mutate(amplicon="Fun")
+
+FLnmds = OTUF %>% 
+  dplyr::filter(grepl(".L", Sample)) %>% 
+  select(-Sample) %>% 
+  metaMDS(distance="bray", k=2, trymax=1000) %>% 
+  scores(display="sites") %>% 
+  as.data.frame()
+FLnmds = OTUF %>% 
+  dplyr::filter(grepl(".L", Sample)) %>% 
+  select(Sample) %>% 
+  cbind(FLnmds) %>% 
+  mutate(amplicon="Fun")
+
+FSnmds = OTUF %>% 
+  dplyr::filter(grepl(".S", Sample)) %>% 
+  select(-Sample) %>% 
+  metaMDS(distance="bray", k=2, trymax=1000) %>% 
+  scores(display="sites") %>% 
+  as.data.frame()
+FSnmds = OTUF %>% 
+  dplyr::filter(grepl(".S", Sample)) %>% 
+  select(Sample) %>% 
+  cbind(FSnmds) %>% 
+  mutate(amplicon="Fun")
+```
+
+### Combine all
+```{r}
+all.nmds = rbind(AFnmds, ALnmds, ASnmds) %>% 
+  rbind(BFnmds, BLnmds, BSnmds) %>% 
+  rbind(FFnmds, FLnmds, FSnmds) %>% 
+  
+  gather(key=MDS, value=value, NMDS1:NMDS2) %>% 
+  mutate(group=paste(amplicon, MDS, sep="_")) %>% 
+  select(-amplicon, -MDS) %>% 
+  
+  group_by(Sample) %>% 
+  spread(key=group, value=value) %>% 
+  full_join(metaB[,c("Sample", "Animal", "AgeGroup", "Type", "Daysln", "Diet")], by="Sample") %>% 
+  
+  gather(key="key", value="value", Arc_NMDS1:Fun_NMDS2) %>% 
+  separate(key, c("amplicon","MDS"), by="_") %>% 
+  spread(key=MDS, value=value)
+```
+
+## Panels
+**Main**
+```{r warning=FALSE}
+nmds_main = all.nmds %>% 
+
+ggplot(aes(x=NMDS1, y=NMDS2)) +
+  geom_point(aes(color=Daysln,
+                 shape=Diet,
+                 size=0.1),
+             stroke=0.75) +
+  scale_colour_gradientn(colours = myPalette(100), limits=c(2,7)) +
+  scale_shape_manual(values = c(16,17,0)) +
+  theme_base() +
+  guides(color=FALSE, size=FALSE, shape=FALSE) +
+  labs(x="", y="") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.margin = margin(0.5,0.5,0,0, "cm")) +
+  facet_wrap(amplicon~Type, scales = "free")
+```
+
+**Inset 1**
+```{r warning=FALSE}
+nmds_inset1 = all.nmds %>% 
+  filter(amplicon=="Bac" & Type=="L" & AgeGroup %in% c("1yr","2yr")) %>% 
+
+ggplot(aes(x=NMDS1, y=NMDS2)) +
+  geom_point(aes(color=Daysln, shape=Diet, size=0.1), stroke=0.75) +
+  scale_colour_gradientn(colours = myPalette(100), limits=c(2,7)) +
+  scale_shape_manual(values = c(16,17,0)) +
+  theme_base() +
+  guides(color=FALSE, size=FALSE, shape=FALSE) +
+  labs(x="", y="") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(), 
+        panel.border = element_blank(), 
+        plot.margin = margin(0.5,0.5,0,0, "cm"))
+```
+
+**Inset 2**
+```{r warning=FALSE}
+nmds_inset2 = all.nmds %>% 
+  filter(amplicon=="Bac" & Type=="S" & AgeGroup %in% c("1yr","2yr")) %>% 
+
+ggplot(aes(x=NMDS1, y=NMDS2)) +
+  geom_point(aes(color=Daysln, shape=Diet, size=0.1), stroke=0.75) +
+  scale_colour_gradientn(colours = myPalette(100), limits=c(2,7)) +
+  scale_shape_manual(values = c(16,17,0)) +
+  theme_base() +
+  guides(color=FALSE, size=FALSE, shape=FALSE) +
+  labs(x="", y="") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(), 
+        plot.margin = margin(0.5,0.5,0,0, "cm"))
+```
+
+## Full plot
+```{r warning=FALSE}
+fig1 = ggdraw() +
+  draw_plot(nmds_main, x = 0, y = 0, scale = 1) +
+  draw_plot(nmds_inset1, x = 0.05, y = -0.1, scale = 0.18) +
+  draw_plot(nmds_inset2, x = 0.4, y = -0.1, scale = 0.18)
+
+fig1
+```
+
+```{r}
+save_plot("figures/figure1.pdf", fig1,  base_height = 12, base_aspect_ratio = 0.9)
+```
+
+# Figure 2
+Diversity of fecal and ruminal microbiota in cows raised on different diets.
+
+## Define colors
+```{r}
+col_vec_age = c("#c9314c", "#f7894f", "#fddc88", "#72c7a4", "#4969ae")
+```
+
+## Merge data
+```{r}
+all.shan = metaA %>% 
+  select(Sample, shannon) %>% 
+  rename(Arc=shannon) %>% 
+  
+  full_join(metaF, by="Sample") %>% 
+  select(Sample, Arc, shannon) %>% 
+  rename(Fun=shannon) %>% 
+  
+  full_join(metaB, by="Sample") %>% 
+  select(Sample, AgeGroup, Type, Arc, Fun, shannon) %>% 
+  rename(Bac=shannon) %>% 
+  
+  gather(key="amplicon", value="shannon", Arc:Bac)
+```
+
+## Full plot
+```{r warning=FALSE}
+shan_plot = all.shan %>% 
+
+ggplot() +
+  geom_boxplot(aes(
+    x=factor(AgeGroup, c("2w","4w","8w","1yr","2yr")), 
+    y=shannon, 
+    fill=factor(AgeGroup, c("2w","4w","8w","1yr","2yr")))) +
+  
+  scale_fill_manual(values = col_vec_age) +
+  theme_base() +
+  guides(fill=FALSE) +
+  labs(x="", y="") +
+  theme(plot.margin = margin(0.5,0.5,0,0, "cm")) +
+  
+  facet_wrap(amplicon~Type)
+
+shan_plot
+```
+
+```{r}
+save_plot("figures/figure2.pdf", shan_plot,  base_height = 9, base_aspect_ratio = 0.9)
+```
+
+## Determine significance letters
+**Archaea**
+```{r}
+metaA %>% 
+  mutate(group=paste(AgeGroup, Type, sep="_")) %>% 
+  aov(shannon~group, .) %>% 
+  HSD.test("group", group=TRUE) %>% 
+  .[["groups"]]
+```
+
+**Bacteria**
+```{r}
+metaB %>% 
+  mutate(group=paste(AgeGroup, Type, sep="_")) %>% 
+  aov(shannon~group, .) %>% 
+  HSD.test("group", group=TRUE) %>% 
+  .[["groups"]]
+```
+
+**Fungi**
+```{r}
+metaF %>% 
+  mutate(group=paste(AgeGroup, Type, sep="_")) %>% 
+  aov(shannon~group, .) %>% 
+  HSD.test("group", group=TRUE) %>% 
+  .[["groups"]]
+```
+
+# Figure 3
+Microbial taxa shared between calves and cows. 
+
+1. In [mothur](https://www.mothur.org/wiki/Main_Page), merge AgeGroup+Diet groups
+    + Example: `merge.groups(shared=Arc.shared, design=Arc.txt)`
+2. In [mothur](https://www.mothur.org/wiki/Main_Page), get OTU list for each group
+    + Example: `list.otulabels(shared=Bact.merge.shared, groups=group)`
+3. Input OTU lists into  the Bioinformatics & Evolutionary Genomics [Venn diagram tool](http://bioinformatics.psb.ugent.be/webtools/Venn/)
+
+# Figure 4
+Calf diet impacts on weight gain and milk production.
+
+## Define colors
+```{r}
+col_vec_diet = c("#7c590a", "#36a8e0", "#42871e")
+```
+
+## A. 2 days to weaning (8 weeks)
+```{r}
+calf_weight = weight %>%
+  dplyr::filter(AgeExact<100) %>% 
+  
+  ggplot(aes(color=factor(Diet, c("A","C","B")))) + 
+  stat_smooth(aes(x=AgeExact, y=Wt_norm), method="lm", se=FALSE) + 
+  
+  geom_point(aes(x=AgeExact, y=Wt_norm, shape=factor(Diet, c("A","C","B")))) +
+  scale_shape(solid=FALSE, labels=c("Starter","Mix","Silage")) +
+  scale_color_manual(values=col_vec_diet, labels=c("Starter","Mix","Silage")) +
+  
+  theme_base() +
+  theme(legend.position="none") +
+  labs(x="Age (days)", y="Weight gain (kg)")
+```
+
+## B. 8 weeks to first lactation
+```{r}
+cow_weight = weight %>%
+  dplyr::filter(AgeExact>100) %>% 
+  
+  ggplot(aes(color=factor(Diet, c("A","C","B")))) + 
+  stat_smooth(aes(x=AgeExact, y=Wt_norm), method="lm", se=FALSE) + 
+  
+  geom_point(aes(x=AgeExact, y=Wt_norm, shape=factor(Diet, c("A","C","B")))) +
+  scale_shape(solid=FALSE, labels=c("Starter","Mix","Silage")) +
+  scale_color_manual(values=col_vec_diet, labels=c("Starter","Mix","Silage")) +
+  
+  theme_base() +
+  guides(color=guide_legend(title=""), shape=guide_legend(title="")) +
+  labs(x="Age (days)", y="")
+```
+
+## C. Milk production
+```{r}
+milk_plot = metaBave %>%
+  dplyr::filter(AgeGroup=="2yr" & Type=="F") %>% 
+  select(Diet, MPE, Effic) %>% 
+  gather(key=metric, value=value, MPE:Effic) %>% 
+  
+  ggplot() + 
+  geom_boxplot(aes(x=factor(Diet, c("A","C","B")),
+                   y=value,
+                   fill=factor(Diet, c("A","C","B")))) +
+  
+  scale_fill_manual(values=col_vec_diet, labels=c("Starter","Mix","Silage")) +
+  
+  theme_base() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle=45, vjust = 0.01)) +
+  scale_x_discrete(labels=c("A" = "Starter", "C" = "Mix", "B" = "Silage")) +
+  labs(x="", y="Efficiency (MJ/kg DMI)") +
+  facet_grid(~metric)
+```
+
+## Full plot
+```{r warning=FALSE}
+fig4 = plot_grid(calf_weight, cow_weight, milk_plot, nrow=1, rel_widths = c(3,3.9,3))
+
+fig4
+```
+
+```{r}
+save_plot("figures/figure4.pdf", fig4, base_width = 14, base_height = 4)
+```

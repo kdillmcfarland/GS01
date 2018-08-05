@@ -1,0 +1,724 @@
+---
+title: "Individual OTU analyses"
+subtitle: "GS01 Calf diets"
+author: "Kim Dill-McFarland"
+date: "version `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+editor_options: 
+  chunk_output_type: console
+---
+<script>
+$(document).ready(function() {
+  $items = $('div#TOC li');
+  $items.each(function(idx) {
+    num_ul = $(this).parentsUntil('#TOC').length;
+    $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+  });
+});
+</script>
+
+# Load data
+Created in `1_data_manip.Rmd`
+```{r}
+set.seed(8325)
+load("GS01.data.RData")
+```
+
+# Packages
+```{r}
+#Data manipulation
+library(tidyverse)
+```
+
+# Functions
+```{r }
+source("functions/simper_pretty.R")
+source("functions/R_krusk.R")
+```
+
+# Model 1: Diet and age (interaction only)
+Diet:AgeGroup
+
+* Similarity percentages (SIMPER)
+    - up to 100% total cumulative SIMPER (`perc_cutoff=1`)
+    - 1% minimum contribution from any single OTU (`low_cutoff = 'y', low_val=0.01`)
+* Kruskal-Wallis with the Benjamini-Hochberg correction for multiple comparisons
+
+Load in raw mothur-formatted taxonomy tables to work with `kruskal.pretty` function.
+```{r message=FALSE}
+A.taxonomy = read.table("data/taxonomy/GS01.Arc.final.fn.unique_list.0.03.cons.taxonomy", row.names=1, header=TRUE, sep="\t")
+
+B.taxonomy = read.table("data/taxonomy/GS01.Bact.final.fn.unique_list.0.03.cons.taxonomy", row.names=1, header=TRUE, sep="\t")
+
+F.taxonomy = read.table("data/taxonomy/GS01.Fun.final.fn.unique_list.0.03.cons.taxonomy", row.names=1, header=TRUE, sep="\t")
+```
+
+## Archaea
+### Fecal
+Subset data
+```{r}
+meta.temp = metaA %>%
+  filter(Type == "F")
+```
+
+```{r}
+OTU.temp = metaA %>%
+  select(Sample, Type) %>% 
+  filter(Type == "F") %>% 
+  left_join(OTUA, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**SIMPER**
+```{r eval=FALSE}
+simper.pretty(OTU.temp, meta.temp, c('DietAge'), perc_cutoff=1, low_cutoff = 'y', low_val=0.01, 'results/SIMPER/OTUAF')
+```
+
+**Kruskal-Wallis**
+```{r eval=FALSE}
+kruskal.pretty(OTU.temp, meta.temp, data.frame(read.csv('results/SIMPER/OTUAF_clean_simper.csv')), c('DietAge'), 'results/KruskalWallis/OTUAF', A.taxonomy)
+```
+
+### Rumen liquids
+Subset data
+```{r}
+meta.temp = metaA %>%
+  filter(Type == "L")
+```
+
+```{r}
+OTU.temp = metaA %>%
+  select(Sample, Type) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUA, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**SIMPER**
+```{r eval=FALSE}
+simper.pretty(OTU.temp, meta.temp, c('DietAge'), perc_cutoff=1, low_cutoff = 'y', low_val=0.01, 'results/SIMPER/OTUAL')
+```
+
+**Kruskal-Wallis**
+```{r eval=FALSE}
+kruskal.pretty(OTU.temp, meta.temp, data.frame(read.csv('results/SIMPER/OTUAL_clean_simper.csv')), c('DietAge'), 'results/KruskalWallis/OTUAL', A.taxonomy)
+```
+
+### Rumen solids
+Subset data
+```{r}
+meta.temp = metaA %>%
+  filter(Type == "S")
+```
+
+```{r}
+OTU.temp = metaA %>%
+  select(Sample, Type) %>% 
+  filter(Type == "S") %>% 
+  left_join(OTUA, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**SIMPER**
+```{r eval=FALSE}
+simper.pretty(OTU.temp, meta.temp, c('DietAge'), perc_cutoff=1, low_cutoff = 'y', low_val=0.01, 'results/SIMPER/OTUAS')
+```
+
+**Kruskal-Wallis**
+```{r eval=FALSE}
+kruskal.pretty(OTU.temp, meta.temp, data.frame(read.csv('results/SIMPER/OTUAS_clean_simper.csv')), c('DietAge'), 'results/KruskalWallis/OTUAS', A.taxonomy)
+```
+
+## Bacteria
+### Fecal
+Subset data
+```{r}
+meta.temp = metaB %>%
+  filter(Type == "F")
+```
+
+```{r}
+OTU.temp = metaB %>%
+  select(Sample, Type) %>% 
+  filter(Type == "F") %>% 
+  left_join(OTUB, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**SIMPER**
+```{r eval=FALSE}
+simper.pretty(OTU.temp, meta.temp, c('DietAge'), perc_cutoff=1, low_cutoff = 'y', low_val=0.01, 'results/SIMPER/OTUBF')
+```
+
+**Kruskal-Wallis**
+```{r eval=FALSE}
+kruskal.pretty(OTU.temp, meta.temp, data.frame(read.csv('results/SIMPER/OTUBF_clean_simper.csv')), c('DietAge'), 'results/KruskalWallis/OTUBF', A.taxonomy)
+```
+
+### Rumen liquids
+Subset data
+```{r}
+meta.temp = metaB %>%
+  filter(Type == "L")
+```
+
+```{r}
+OTU.temp = metaB %>%
+  select(Sample, Type) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUB, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**SIMPER**
+```{r eval=FALSE}
+simper.pretty(OTU.temp, meta.temp, c('DietAge'), perc_cutoff=1, low_cutoff = 'y', low_val=0.01, 'results/SIMPER/OTUBL')
+```
+
+**Kruskal-Wallis**
+```{r eval=FALSE}
+kruskal.pretty(OTU.temp, meta.temp, data.frame(read.csv('results/SIMPER/OTUBL_clean_simper.csv')), c('DietAge'), 'results/KruskalWallis/OTUBL', A.taxonomy)
+```
+
+### Rumen solids
+Subset data
+```{r}
+meta.temp = metaB %>%
+  filter(Type == "S")
+```
+
+```{r}
+OTU.temp = metaB %>%
+  select(Sample, Type) %>% 
+  filter(Type == "S") %>% 
+  left_join(OTUB, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**SIMPER**
+```{r eval=FALSE}
+simper.pretty(OTU.temp, meta.temp, c('DietAge'), perc_cutoff=1, low_cutoff = 'y', low_val=0.01, 'results/SIMPER/OTUBS')
+```
+
+**Kruskal-Wallis**
+```{r eval=FALSE}
+kruskal.pretty(OTU.temp, meta.temp, data.frame(read.csv('results/SIMPER/OTUBS_clean_simper.csv')), c('DietAge'), 'results/KruskalWallis/OTUBS', A.taxonomy)
+```
+
+## Fungi
+### Fecal
+Subset data
+```{r}
+meta.temp = metaF %>%
+  filter(Type == "F")
+```
+
+```{r}
+OTU.temp = metaF %>%
+  select(Sample, Type) %>% 
+  filter(Type == "F") %>% 
+  left_join(OTUF, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**SIMPER**
+```{r eval=FALSE}
+simper.pretty(OTU.temp, meta.temp, c('DietAge'), perc_cutoff=1, low_cutoff = 'y', low_val=0.01, 'results/SIMPER/OTUFF')
+```
+
+**Kruskal-Wallis**
+```{r eval=FALSE}
+kruskal.pretty(OTU.temp, meta.temp, data.frame(read.csv('results/SIMPER/OTUFF_clean_simper.csv')), c('DietAge'), 'results/KruskalWallis/OTUFF', A.taxonomy)
+```
+
+### Rumen liquids
+Subset data
+```{r}
+meta.temp = metaF %>%
+  filter(Type == "L")
+```
+
+```{r}
+OTU.temp = metaF %>%
+  select(Sample, Type) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUF, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**SIMPER**
+```{r eval=FALSE}
+simper.pretty(OTU.temp, meta.temp, c('DietAge'), perc_cutoff=1, low_cutoff = 'y', low_val=0.01, 'results/SIMPER/OTUFL')
+```
+
+**Kruskal-Wallis**
+```{r eval=FALSE}
+kruskal.pretty(OTU.temp, meta.temp, data.frame(read.csv('results/SIMPER/OTUFL_clean_simper.csv')), c('DietAge'), 'results/KruskalWallis/OTUFL', A.taxonomy)
+```
+
+### Rumen solids
+Subset data
+```{r}
+meta.temp = metaF %>%
+  filter(Type == "S")
+```
+
+```{r}
+OTU.temp = metaF %>%
+  select(Sample, Type) %>% 
+  filter(Type == "S") %>% 
+  left_join(OTUF, by="Sample") %>% 
+  select(-Sample, -Type)
+```
+
+**SIMPER**
+```{r eval=FALSE}
+simper.pretty(OTU.temp, meta.temp, c('DietAge'), perc_cutoff=1, low_cutoff = 'y', low_val=0.01, 'results/SIMPER/OTUFS')
+```
+
+**Kruskal-Wallis**
+```{r eval=FALSE}
+kruskal.pretty(OTU.temp, meta.temp, data.frame(read.csv('results/SIMPER/OTUFS_clean_simper.csv')), c('DietAge'), 'results/KruskalWallis/OTUFS', A.taxonomy)
+```
+
+## Select significant results
+Read in Kruskal-Wallis results tables
+```{r}
+{# Set working directory for results files
+require(plyr)
+setwd("results/KruskalWallis/")
+# List all Kruskal results files
+file_list = list.files()
+
+  # Read in all files and merge into 1 data frame
+for(file in file_list){
+  # if the merged dataset doesn't exist, create it
+  if (!exists("KW_results")){
+    # Read in 1st dataset
+    KW_results = read.table(file, header=TRUE, sep="\t")
+  # Add file name to data column to identify origin
+    KW_results$origin = file
+  }
+   
+  # if the merged dataset does exist, append to it
+  if (exists("KW_results")){
+    # Read in additional dataset
+    temp_dataset =  read.csv(file, header=TRUE)
+    # Add file name to data column to identify origin
+    temp_dataset$origin = file
+    # Merge datasets
+    KW_results<-rbind.fill(KW_results, temp_dataset)
+    # Remove original additional dataset
+    rm(temp_dataset)
+  }
+}
+# Return working directory to main project directory
+setwd("../..")
+}
+```
+
+Select significant (FDR P < 0.05) comparisons of interest.
+
+* Diet A across ages
+    - A2w_A4w, A4w_A8w, A8w_A1yr, A1yr_A2yr
+* Diet B across ages
+    - B2w_B4w, B4w_B8w, B8w_B1yr, B1yr_B2yr
+* Diet C across ages
+    - C2w_C4w, C4w_C8w, C8w_C1yr, C1yr_C2yr
+
+* Age 2 weeks between diets
+    - A2w_B2w, B2w_C2w, A2w_C2w
+* Age 4 weeks between diets
+    - A4w_B4w, B4w_C4w, A4w_C4w
+* Age 8 weeks between diets
+    - A8w_B8w, B8w_C8w, A8w_C8w
+* Age 1 year between diets
+    - A1yr_B1yr, B1yr_A1yr, C1yr_B1yr, A1yr_C1yr, C1yr_A1yr
+* Age 2 years between diets
+    - A2yr_B2yr, B2yr_A2yr, B2yr_C2yr, C2yr_B2yr, A2yr_C2yr
+
+```{r}
+KW_select = KW_results %>% 
+  filter(fdr_krusk_p.val <= 0.05) %>% 
+  filter(Comparison %in% c(
+  "A2w_A4w", "A4w_A8w", "A8w_A1yr", "A1yr_A2yr",
+  "B2w_B4w", "B4w_B8w", "B8w_B1yr", "B1yr_B2yr",
+  "C2w_C4w", "C4w_C8w", "C8w_C1yr", "C1yr_C2yr",
+         
+  "A2w_B2w", "B2w_C2w", "A2w_C2w",
+  "A4w_B4w", "B4w_C4w", "A4w_C4w",
+  "A8w_B8w", "B8w_C8w", "A8w_C8w",
+  "A1yr_B1yr", "B1yr_A1yr", "C1yr_B1yr", "A1yr_C1yr", "C1yr_A1yr",
+  "A2yr_B2yr", "B2yr_A2yr", "B2yr_C2yr", "C2yr_B2yr", "A2yr_C2yr")) %>% 
+  select(-X)
+
+KW_select
+```
+
+Print significant results table.
+```{r}
+write.table(KW_select, file="results/KW_significant.csv", sep="\t")
+```
+
+# Model 2: Milk production efficiency
+2yr samples only, averaged 3 consecutive rumen samples to avoid animal effects  
+
+* Correlate OTUs to MPE or overall efficiency with Kendall’s correlations
+* Strong correlations considered as <-0.7 or >0.7
+* Minimum relative abundance of 0.5% in at least one sample
+
+## Archaea
+### Fecal
+Subset data
+```{r}
+meta.temp = metaAave %>%
+  filter(Type == "F" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaAave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  left_join(OTUAave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**MPE**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$MPE, method="kendall"), sep="\t", file="results/Kendall_milk/A.F.MPE.txt")
+```
+
+**Efficiency**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$Effic, method="kendall"), sep="\t", file="results/Kendall_milk/A.F.effic.txt")
+```
+
+### Rumen liquids
+Subset data
+```{r}
+meta.temp = metaAave %>%
+  filter(Type == "L" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaAave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  left_join(OTUAave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**MPE**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$MPE, method="kendall"), sep="\t", file="results/Kendall_milk/A.L.MPE.txt")
+```
+
+**Efficiency**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$Effic, method="kendall"), sep="\t", file="results/Kendall_milk/A.L.effic.txt")
+```
+
+### Rumen solids
+Subset data
+```{r}
+meta.temp = metaAave %>%
+  filter(Type == "S" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaAave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  left_join(OTUAave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**MPE**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$MPE, method="kendall"), sep="\t", file="results/Kendall_milk/A.S.MPE.txt")
+```
+
+**Efficiency**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$Effic, method="kendall"), sep="\t", file="results/Kendall_milk/A.S.effic.txt")
+```
+
+## Bacteria
+### Fecal
+Subset data
+```{r}
+meta.temp = metaBave %>%
+  filter(Type == "F" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaBave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  left_join(OTUBave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**MPE**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$MPE, method="kendall"), sep="\t", file="results/Kendall_milk/B.F.MPE.txt")
+```
+
+**Efficiency**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$Effic, method="kendall"), sep="\t", file="results/Kendall_milk/B.F.effic.txt")
+```
+
+### Rumen liquids
+```{r}
+meta.temp = metaBave %>%
+  filter(Type == "L" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaBave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  left_join(OTUBave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**MPE**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$MPE, method="kendall"), sep="\t", file="results/Kendall_milk/B.L.MPE.txt")
+```
+
+**Efficiency**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$Effic, method="kendall"), sep="\t", file="results/Kendall_milk/B.L.effic.txt")
+```
+
+### Rumen solids
+Subset data
+```{r}
+meta.temp = metaBave %>%
+  filter(Type == "S" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaBave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  left_join(OTUBave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**MPE**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$MPE, method="kendall"), sep="\t", file="results/Kendall_milk/B.S.MPE.txt")
+```
+
+**Efficiency**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$Effic, method="kendall"), sep="\t", file="results/Kendall_milk/B.S.effic.txt")
+```
+
+## Fungi
+### Fecal
+Subset data
+```{r}
+meta.temp = metaFave %>%
+  filter(Type == "F" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaFave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  left_join(OTUFave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**MPE**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$MPE, method="kendall"), sep="\t", file="results/Kendall_milk/F.F.MPE.txt")
+```
+
+**Efficiency**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$Effic, method="kendall"), sep="\t", file="results/Kendall_milk/F.F.effic.txt")
+```
+
+### Rumen liquids
+Subset data
+```{r}
+meta.temp = metaFave %>%
+  filter(Type == "L" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaFave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  left_join(OTUFave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**MPE**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$MPE, method="kendall"), sep="\t", file="results/Kendall_milk/F.L.MPE.txt")
+```
+
+**Efficiency**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$Effic, method="kendall"), sep="\t", file="results/Kendall_milk/F.L.effic.txt")
+```
+
+### Rumen solids
+Subset data
+```{r}
+meta.temp = metaFave %>%
+  filter(Type == "S" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaFave %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  left_join(OTUFave, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**MPE**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$MPE, method="kendall"), sep="\t", file="results/Kendall_milk/F.S.MPE.txt")
+```
+
+**Efficiency**
+```{r eval=FALSE}
+write.table(cor(OTU.temp, meta.temp$Effic, method="kendall"), sep="\t", file="results/Kendall_milk/F.S.effic.txt")
+```
+
+## Select strong correlations
+Read in Kendall results tables
+```{r}
+{# Set working directory for results files
+setwd("results/Kendall_milk/")
+# List all Kruskal results files
+file_list = list.files()
+
+  # Read in all files and merge into 1 data frame
+for(file in file_list){
+  # if the merged dataset doesn't exist, create it
+  if (!exists("Kendall_milk_results")){
+    # Read in 1st dataset
+    Kendall_milk_results = read.table(file, header=TRUE, row.names=NULL, sep="\t")
+  # Add file name to data column to identify origin
+    Kendall_milk_results$origin = file
+  }
+   
+  # if the merged dataset does exist, append to it
+  if (exists("Kendall_milk_results")){
+    # Read in additional dataset
+    temp_dataset =  read.table(file, header=TRUE, row.names=NULL, sep="\t")
+    # Add file name to data column to identify origin
+    temp_dataset$origin = file
+    # Merge datasets
+    Kendall_milk_results<-rbind(Kendall_milk_results, temp_dataset)
+    # Remove original additional dataset
+    rm(temp_dataset)
+  }
+}
+# Return working directory to main project directory
+setwd("../..")
+}
+```
+
+Select strong correlations <-0.7 or >0.7.
+```{r}
+Kendall_milk_select = Kendall_milk_results %>% 
+  dplyr::rename(Kendall = V1, OTU=row.names) %>% 
+  dplyr::filter(Kendall <= -0.7 | Kendall >=0.7) %>% 
+  separate(origin, c("amplicon", "Type", "variable", "filetype"), by=".")
+```
+
+## Determine maximum relative abundances of OTUs.
+### Archaea
+```{r}
+OTUA_2yr_abund = metaA %>%
+  select(Sample, Animal, AgeGroup, Type) %>% 
+  # Merge with OTU tables
+  left_join(OTUA, by="Sample") %>% 
+  # Use only 2 year samples
+  filter(AgeGroup == "2yr") %>% 
+  # Convert to percent relative abundance
+  gather(key = OTU, value = count, -Sample, -Animal, -AgeGroup, -Type) %>% 
+  group_by(Sample) %>%
+  mutate(percent = count / sum(count) * 100) %>%
+
+  # Find maximum abundance for each OTU
+  group_by(OTU, Type) %>% 
+  dplyr::summarize(max_perc = max(percent)) %>% 
+
+  # Add column of amplicon type for later merging with other OTU tables
+  mutate(amplicon="A")
+```
+
+### Bacteria
+```{r}
+OTUB_2yr_abund = metaB %>%
+  select(Sample, Animal, AgeGroup, Type) %>% 
+  # Merge with OTU tables
+  left_join(OTUB, by="Sample") %>% 
+  # Use only 2 year samples
+  filter(AgeGroup == "2yr") %>% 
+  # Convert to percent relative abundance
+  gather(key = OTU, value = count, -Sample, -Animal, -AgeGroup, -Type) %>% 
+  group_by(Sample) %>%
+  mutate(percent = count / sum(count) * 100) %>%
+
+  # Find maximum abundance for each OTU
+  group_by(OTU, Type) %>% 
+  dplyr::summarize(max_perc = max(percent)) %>% 
+
+  # Add column of amplicon type for later merging with other OTU tables
+  mutate(amplicon="B")
+```
+
+### Fungi
+```{r}
+OTUF_2yr_abund = metaF %>%
+  select(Sample, Animal, AgeGroup, Type) %>% 
+  # Merge with OTU tables
+  left_join(OTUF, by="Sample") %>% 
+  # Use only 2 year samples
+  filter(AgeGroup == "2yr") %>% 
+  # Convert to percent relative abundance
+  gather(key = OTU, value = count, -Sample, -Animal, -AgeGroup, -Type) %>% 
+  group_by(Sample) %>%
+  mutate(percent = count / sum(count) * 100) %>%
+
+  # Find maximum abundance for each OTU
+  group_by(OTU, Type) %>% 
+  dplyr::summarize(max_perc = max(percent)) %>% 
+
+  # Add column of amplicon type for later merging with other OTU tables
+  mutate(amplicon="F")
+```
+
+### Combine all
+```{r}
+OTU_2yr_abund = rbind(OTUA_2yr_abund, OTUB_2yr_abund)
+OTU_2yr_abund = rbind(OTU_2yr_abund, OTUF_2yr_abund)
+```
+
+## Add abundances to strong correlations
+```{r}
+Kendall_milk_select_abund = Kendall_milk_select %>% 
+  left_join(OTU_2yr_abund, by=c("OTU", "amplicon", "Type"))
+```
+
+Print significant results table.
+```{r}
+write.table(Kendall_milk_select_abund, file="results/Kendall_milk_significant.txt", sep="\t", row.names=FALSE)
+```

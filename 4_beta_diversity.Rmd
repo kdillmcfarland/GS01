@@ -1,0 +1,1075 @@
+---
+title: "Beta-diversity analyses"
+subtitle: "GS01 Calf diets"
+author: "Kim Dill-McFarland"
+date: "version `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+editor_options: 
+  chunk_output_type: console
+---
+<script>
+$(document).ready(function() {
+  $items = $('div#TOC li');
+  $items.each(function(idx) {
+    num_ul = $(this).parentsUntil('#TOC').length;
+    $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+  });
+});
+</script>
+
+# Load data
+Created in `1_data_manip.Rmd`
+```{r}
+set.seed(8325)
+load("GS01.data.RData")
+```
+
+# Packages
+```{r Load packages}
+#Beta-diversity analyses and plots
+library(vegan)
+#Data manipulation
+library(tidyverse)
+```
+
+# Functions
+```{r}
+source("functions/Pairwise_adonis2.R")
+source("functions/pairwise_permdisp.R")
+```
+
+# Average beta by age
+## Archaea
+**Bray-Curtis**
+```{r}
+BC.temp = OTUA %>%
+  # Remove non-numeric labels
+  select(-Sample) %>% 
+  vegdist(method="bray") %>% 
+  # Convert to data frame
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  # Label columns and rows by sample name
+  mutate(Sample=OTUA$Sample) %>%
+  rename_if(is.numeric, ~ OTUA$Sample) %>% 
+  # Add metadata
+  full_join(metaA[,c("Sample","Animal","AgeGroup","Type")], by="Sample") %>% 
+  # Reformat to long
+  gather(-Sample, -Animal, -AgeGroup, -Type, key="Sample2", value="BC") %>% 
+  # Remove self comparisons
+  dplyr::filter(BC > 0) %>% 
+  # Calculate mean and stdev
+  group_by(AgeGroup, Type) %>% 
+  summarize(mean=mean(BC, na.rm=TRUE), sd=sd(BC, na.rm=TRUE)) %>% 
+  mutate(amplicon="Arc", metric="BC")
+```
+
+**Jaccard**
+```{r}
+J.temp = OTUA %>%
+  # Remove non-numeric labels
+  select(-Sample) %>% 
+  vegdist(method="jaccard") %>% 
+  # Convert to data frame
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  # Label columns and rows by sample name
+  mutate(Sample=OTUA$Sample) %>%
+  rename_if(is.numeric, ~ OTUA$Sample) %>% 
+  # Add metadata
+  full_join(metaA[,c("Sample","Animal","AgeGroup","Type")], by="Sample") %>% 
+  # Reformat to long
+  gather(-Sample, -Animal, -AgeGroup, -Type, key="Sample2", value="J") %>% 
+  # Remove self comparisons
+  dplyr::filter(J > 0) %>% 
+  # Calculate mean and stdev
+  group_by(AgeGroup, Type) %>% 
+  summarize(mean=mean(J, na.rm=TRUE), sd=sd(J, na.rm=TRUE)) %>% 
+  mutate(amplicon="Arc", metric="J")
+```
+
+**Combine**
+```{r eval=FALSE}
+write.table(rbind(BC.temp, J.temp), "results/beta_div/A.beta.txt", row.names=FALSE, sep="\t")
+```
+
+## Bacteria
+**Bray-Curtis**
+```{r}
+BC.temp = OTUB %>%
+  # Remove non-numeric labels
+  select(-Sample) %>% 
+  vegdist(method="bray") %>% 
+  # Convert to data frame
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  # Label columns and rows by sample name
+  mutate(Sample=OTUB$Sample) %>%
+  rename_if(is.numeric, ~ OTUB$Sample) %>% 
+  # Add metadata
+  full_join(metaB[,c("Sample","Animal","AgeGroup","Type")], by="Sample") %>% 
+  # Reformat to long
+  gather(-Sample, -Animal, -AgeGroup, -Type, key="Sample2", value="BC") %>% 
+  # Remove self comparisons
+  dplyr::filter(BC > 0) %>% 
+  # Calculate mean and stdev
+  group_by(AgeGroup, Type) %>% 
+  summarize(mean=mean(BC, na.rm=TRUE), sd=sd(BC, na.rm=TRUE)) %>% 
+  mutate(amplicon="Bac", metric="BC")
+```
+
+**Jaccard**
+```{r}
+J.temp = OTUB %>%
+  # Remove non-numeric labels
+  select(-Sample) %>% 
+  vegdist(method="jaccard") %>% 
+  # Convert to data frame
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  # Label columns and rows by sample name
+  mutate(Sample=OTUB$Sample) %>%
+  rename_if(is.numeric, ~ OTUB$Sample) %>% 
+  # Add metadata
+  full_join(metaB[,c("Sample","Animal","AgeGroup","Type")], by="Sample") %>% 
+  # Reformat to long
+  gather(-Sample, -Animal, -AgeGroup, -Type, key="Sample2", value="J") %>% 
+  # Remove self comparisons
+  dplyr::filter(J > 0) %>% 
+  # Calculate mean and stdev
+  group_by(AgeGroup, Type) %>% 
+  summarize(mean=mean(J, na.rm=TRUE), sd=sd(J, na.rm=TRUE)) %>% 
+  mutate(amplicon="Bac", metric="J")
+```
+
+**Combine**
+```{r eval=FALSE}
+write.table(rbind(BC.temp, J.temp), "results/beta_div/B.beta.txt", row.names=FALSE, sep="\t")
+```
+
+## Fungi
+**Bray-Curtis**
+```{r}
+BC.temp = OTUF %>%
+  # Remove non-numeric labels
+  select(-Sample) %>% 
+  vegdist(method="bray") %>% 
+  # Convert to data frame
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  # Label columns and rows by sample name
+  mutate(Sample=OTUF$Sample) %>%
+  rename_if(is.numeric, ~ OTUF$Sample) %>% 
+  # Add metadata
+  full_join(metaF[,c("Sample","Animal","AgeGroup","Type")], by="Sample") %>% 
+  # Reformat to long
+  gather(-Sample, -Animal, -AgeGroup, -Type, key="Sample2", value="BC") %>% 
+  # Remove self comparisons
+  dplyr::filter(BC > 0) %>% 
+  # Calculate mean and stdev
+  group_by(AgeGroup, Type) %>% 
+  summarize(mean=mean(BC, na.rm=TRUE), sd=sd(BC, na.rm=TRUE)) %>% 
+  mutate(amplicon="Fun", metric="BC")
+```
+
+**Jaccard**
+```{r}
+J.temp = OTUF %>%
+  # Remove non-numeric labels
+  select(-Sample) %>% 
+  vegdist(method="jaccard") %>% 
+  # Convert to data frame
+  as.matrix() %>% 
+  as.data.frame() %>% 
+  # Label columns and rows by sample name
+  mutate(Sample=OTUF$Sample) %>%
+  rename_if(is.numeric, ~ OTUF$Sample) %>% 
+  # Add metadata
+  full_join(metaF[,c("Sample","Animal","AgeGroup","Type")], by="Sample") %>% 
+  # Reformat to long
+  gather(-Sample, -Animal, -AgeGroup, -Type, key="Sample2", value="J") %>% 
+  # Remove self comparisons
+  dplyr::filter(J > 0) %>% 
+  # Calculate mean and stdev
+  group_by(AgeGroup, Type) %>% 
+  summarize(mean=mean(J, na.rm=TRUE), sd=sd(J, na.rm=TRUE)) %>% 
+  mutate(amplicon="Fun", metric="J")
+```
+
+**Combine**
+```{r eval=FALSE}
+write.table(rbind(BC.temp, J.temp), "results/beta_div/F.beta.txt", row.names=FALSE, sep="\t")
+```
+
+## Combine all
+```{r message=FALSE}
+beta.ave = read_tsv("results/beta_div/A.beta.txt") %>%
+  rbind(read_tsv("results/beta_div/B.beta.txt")) %>% 
+  rbind(read_tsv("results/beta_div/F.beta.txt")) %>%
+  gather(mean:sd, key=stat, value=value) %>% 
+  mutate(group=paste(AgeGroup, stat)) %>% 
+  select(-stat,-AgeGroup) %>% 
+  group_by(Type, amplicon, metric) %>% 
+  spread(key=group, value=value)
+```
+
+## Calf vs. Cow
+Average calf (2, 4, 8w) and cow (1, 2yr) sample groups
+```{r message=FALSE}
+read_tsv("results/beta_div/A.beta.txt") %>%
+  rbind(read_tsv("results/beta_div/B.beta.txt")) %>% 
+  rbind(read_tsv("results/beta_div/F.beta.txt")) %>%
+  mutate(group=ifelse(AgeGroup %in% c("2w","4w","8w"), "calf", "cow")) %>% 
+  group_by(Type, amplicon, metric, group) %>% 
+  summarize(mean2=mean(mean, na.rm=TRUE), sd2=sd(sd, na.rm=TRUE)) %>% 
+  gather(mean2:sd2, key=stat, value=value) %>% 
+  mutate(group2=paste(group, stat)) %>% 
+  select(-group,-stat) %>% 
+  group_by(Type, amplicon, metric) %>% 
+  spread(key=group2, value=value) %>% 
+  full_join(beta.ave, by=c("Type","amplicon","metric")) %>% 
+  write.table("results/beta_div/all.beta.txt", row.names=FALSE, sep="\t")
+```
+
+# Model 1: Diet and age
+Diet * AgeGroup
+
+* Permutational ANOVA (PERMANOVA) followed by pairwise PERMANOVA with FDR correction (Benjamini-Hochberg method) if significant
+* Permutation test of multivariate homogeneity of group dispersions (PERMDISP) followed by pairwise TukeyHSD tests if significant
+
+## Archaea
+### Fecal
+Subset data to fecal samples
+```{r}
+meta.temp = metaA %>%
+  filter(Type == "F") %>% 
+  arrange(Sample)
+```
+
+```{r}
+OTU.temp = metaA %>%
+  select(Sample, Type, Diet, AgeGroup, DietAge) %>% 
+  filter(Type == "F") %>% 
+  left_join(OTUA, by="Sample") %>% 
+  arrange(Sample)
+```
+
+#### PERMANOVA
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "fdr", "results/adonis_OTU/A.F.OTU.bray")
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "jaccard", "fdr", "results/adonis_OTU/A.F.OTU.jac")
+```
+
+#### PERMDISP
+Bray-Curtis
+```{r eval=FALSE}
+pairwise.permdisp(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "results/permdisp_OTU/A.F.OTU.bray")
+```
+
+### Rumen liquids
+Subset data to liquid samples
+```{r}
+OTU.temp = metaA %>%
+  select(Sample, Type, Diet, AgeGroup, DietAge) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUA, by="Sample") %>% 
+  arrange(Sample)
+
+meta.temp = metaA %>%
+  filter(Type == "L") %>% 
+  arrange(Sample)
+```
+
+#### PERMANOVA
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "fdr", "results/adonis_OTU/A.L.OTU.bray")
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "jaccard", "fdr", "results/adonis_OTU/A.L.OTU.jac")
+```
+
+#### PERMDISP
+Bray-Curtis
+```{r eval=FALSE}
+pairwise.permdisp(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "results/permdisp_OTU/A.L.OTU.bray")
+```
+
+### Rumen solids
+Subset data to solid samples
+```{r}
+OTU.temp = metaA %>%
+  select(Sample, Type, Diet, AgeGroup, DietAge) %>% 
+  filter(Type == "S") %>% 
+  left_join(OTUA, by="Sample") %>% 
+  arrange(Sample)
+
+meta.temp = metaA %>%
+  filter(Type == "S") %>% 
+  arrange(Sample)
+```
+
+#### PERMANOVA
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "fdr", "results/adonis_OTU/A.S.OTU.bray")
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "jaccard", "fdr", "results/adonis_OTU/A.S.OTU.jac")
+```
+
+#### PERMDISP
+Bray-Curtis
+```{r eval=FALSE}
+pairwise.permdisp(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "results/permdisp_OTU/A.S.OTU.bray")
+```
+
+## Bacteria
+### Fecal
+Subset data to fecal samples
+```{r}
+OTU.temp = metaB %>%
+  select(Sample, Type, Diet, AgeGroup, DietAge) %>% 
+  filter(Type == "F") %>% 
+  left_join(OTUB, by="Sample") %>% 
+  arrange(Sample)
+
+meta.temp = metaB %>%
+  filter(Type == "F") %>% 
+  arrange(Sample)
+```
+
+#### PERMANOVA
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "fdr", "results/adonis_OTU/B.F.OTU.bray")
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "jaccard", "fdr", "results/adonis_OTU/B.F.OTU.jac")
+```
+
+#### PERMDISP
+Bray-Curtis
+```{r eval=FALSE}
+pairwise.permdisp(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "results/permdisp_OTU/B.F.OTU.bray")
+```
+
+### Rumen liquids
+Subset data to liquid samples
+```{r}
+OTU.temp = metaB %>%
+  select(Sample, Type, Diet, AgeGroup, DietAge) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUB, by="Sample") %>% 
+  arrange(Sample)
+
+meta.temp = metaB %>%
+  filter(Type == "L") %>% 
+  arrange(Sample)
+```
+
+#### PERMANOVA
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "fdr", "results/adonis_OTU/B.L.OTU.bray")
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "jaccard", "fdr", "results/adonis_OTU/B.L.OTU.jac")
+```
+
+#### PERMDISP
+Bray-Curtis
+```{r eval=FALSE}
+pairwise.permdisp(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "results/permdisp_OTU/B.L.OTU.bray")
+```
+
+### Rumen solids
+Subset data to solid samples
+```{r}
+OTU.temp = metaB %>%
+  select(Sample, Type, Diet, AgeGroup, DietAge) %>% 
+  filter(Type == "S") %>% 
+  left_join(OTUB, by="Sample") %>% 
+  arrange(Sample)
+
+meta.temp = metaB %>%
+  filter(Type == "S") %>% 
+  arrange(Sample)
+```
+
+#### PERMANOVA
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "fdr", "results/adonis_OTU/B.S.OTU.bray")
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "jaccard", "fdr", "results/adonis_OTU/B.S.OTU.jac")
+```
+
+#### PERMDISP
+Bray-Curtis
+```{r eval=FALSE}
+pairwise.permdisp(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "results/permdisp_OTU/B.S.OTU.bray")
+```
+
+## Fungi
+### Fecal
+Subset data to fecal samples
+```{r}
+OTU.temp = metaF %>%
+  select(Sample, Type, Diet, AgeGroup, DietAge) %>% 
+  filter(Type == "F") %>% 
+  left_join(OTUF, by="Sample") %>% 
+  arrange(Sample)
+
+meta.temp = metaF %>%
+  filter(Type == "F")%>% 
+  arrange(Sample)
+```
+
+#### PERMANOVA
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "fdr", "results/adonis_OTU/F.F.OTU.bray")
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "jaccard", "fdr", "results/adonis_OTU/F.F.OTU.jac")
+```
+
+#### PERMDISP
+Bray-Curtis
+```{r eval=FALSE}
+pairwise.permdisp(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "results/permdisp_OTU/F.F.OTU.bray")
+```
+
+### Rumen liquids
+Subset data to liquid samples
+```{r}
+OTU.temp = metaF %>%
+  select(Sample, Type, Diet, AgeGroup, DietAge) %>% 
+  filter(Type == "L") %>% 
+  left_join(OTUF, by="Sample") %>% 
+  arrange(Sample)
+
+meta.temp = metaF %>%
+  filter(Type == "L") %>% 
+  arrange(Sample)
+```
+
+#### PERMANOVA
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "fdr", "results/adonis_OTU/F.L.OTU.bray")
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "jaccard", "fdr", "results/adonis_OTU/F.L.OTU.jac")
+```
+
+#### PERMDISP
+Bray-Curtis
+```{r eval=FALSE}
+pairwise.permdisp(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "results/permdisp_OTU/F.L.OTU.bray")
+```
+
+### Rumen solids
+Subset data to solid samples
+```{r}
+OTU.temp = metaF %>%
+  select(Sample, Type, Diet, AgeGroup, DietAge) %>% 
+  filter(Type == "S") %>% 
+  left_join(OTUF, by="Sample") %>% 
+  arrange(Sample)
+
+meta.temp = metaF %>%
+  filter(Type == "S") %>% 
+  arrange(Sample)
+```
+
+#### PERMANOVA
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="bray", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "fdr", "results/adonis_OTU/F.S.OTU.bray")
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp[, grepl("Otu", colnames(OTU.temp))] ~ Diet*AgeGroup, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+```{r eval=FALSE}
+pairwise.adonis(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "jaccard", "fdr", "results/adonis_OTU/F.S.OTU.jac")
+```
+
+#### PERMDISP
+Bray-Curtis
+```{r eval=FALSE}
+pairwise.permdisp(OTU.temp, meta.temp, c("Diet", "AgeGroup", "DietAge"), "bray", "results/permdisp_OTU/F.S.OTU.bray")
+```
+
+## Combine PERMANOVA results
+```{r}
+{# Set working directory for results files
+  require(plyr)
+  setwd("results/adonis_OTU/")
+# List all Kruskal results files
+file_list = list.files()
+
+  # Read in all files and merge into 1 data frame
+for(file in file_list){
+  # if the merged dataset doesn't exist, create it
+  if (!exists("adonis_OTU_results")){
+    # Read in 1st dataset
+    adonis_OTU_results = read.table(file, header=TRUE, row.names=NULL, sep="\t")
+  # Add file name to data column to identify origin
+    adonis_OTU_results$origin = file
+  }
+   
+  # if the merged dataset does exist, append to it
+  if (exists("adonis_OTU_results")){
+    # Read in additional dataset
+    temp_dataset =  read.table(file, header=TRUE, row.names=NULL, sep="\t")
+    # Add file name to data column to identify origin
+    temp_dataset$origin = file
+    # Merge datasets
+    adonis_OTU_results<-rbind.fill(adonis_OTU_results, temp_dataset)
+    # Remove original additional dataset
+    rm(temp_dataset)
+  }
+}
+# Return working directory to main project directory
+setwd("../..")
+}
+```
+
+```{r}
+adonis_OTU_results %>% 
+  dplyr::filter(Comparison %in%
+                c("A_B", "A_C", "B_C",
+                  "B_A", "C_A", "C_B",
+                  
+                  "2w_4w", "4w_8w",  "8w_1yr","1yr_2yr",
+                  "4w_2w", "8w_4w",  "1yr_8w","2yr_1yr",
+                  
+                  "A2w_B2w", "A2w_C2w", "B2w_C2w", 
+                  "B2w_A2w", "C2w_A2w", "C2w_B2w",
+                  "A4w_B4w", "A4w_C4w", "B4w_C4w", 
+                  "B4w_A4w", "C4w_A4w", "C4w_B4w", 
+                  "A8w_B8w", "A8w_C8w", "B8w_C8w", 
+                  "B8w_A8w", "C8w_A8w", "C8w_B8w",
+                  "A1yr_B1yr", "A1yr_C1yr", "B1yr_C1yr", 
+                  "B1yr_A1yr", "C1yr_A1yr", "C1yr_B1yr",
+                  "A2yr_B2yr", "A2yr_C2yr", "B2yr_C2yr",
+                  "B2yr_A2yr", "C2yr_A2yr", "C2yr_B2yr")) %>% 
+  select(-Rsq, -pval) %>% 
+  distinct() %>% 
+  spread(key=Comparison,  value=p.adj) %>% 
+  separate(origin, c("amplicon", "Type", "variable", "beta", "test", "filetype"), by=c(".","_")) %>% 
+  write_tsv("results/adonis_OTU_results.txt", col_names=TRUE)
+```
+
+## Combine PERMDISP results
+```{r}
+{# Set working directory for results files
+  require(plyr)
+  setwd("results/permdisp_OTU/")
+# List all Kruskal results files
+file_list = list.files()
+
+  # Read in all files and merge into 1 data frame
+for(file in file_list){
+  # if the merged dataset doesn't exist, create it
+  if (!exists("permdisp_OTU_results")){
+    # Read in 1st dataset
+    permdisp_OTU_results = read.table(file, header=TRUE, row.names=NULL, sep="\t")
+  # Add file name to data column to identify origin
+    permdisp_OTU_results$origin = file
+  }
+   
+  # if the merged dataset does exist, append to it
+  if (exists("permdisp_OTU_results")){
+    # Read in additional dataset
+    temp_dataset =  read.table(file, header=TRUE, row.names=NULL, sep="\t")
+    # Add file name to data column to identify origin
+    temp_dataset$origin = file
+    # Merge datasets
+    permdisp_OTU_results<-rbind.fill(permdisp_OTU_results, temp_dataset)
+    # Remove original additional dataset
+    rm(temp_dataset)
+  }
+}
+# Return working directory to main project directory
+setwd("../..")
+}
+```
+
+```{r}
+permdisp_OTU_results %>% 
+  dplyr::filter(label %in%
+                c("A-B", "A-C", "B-C",
+                  "B-A", "C-A", "C-B",
+                  
+                  "2w-4w", "4w-8w",  "8w-1yr","1yr-2yr",
+                  "4w-2w", "8w-4w",  "1yr-8w","2yr-1yr",
+                  
+                  "A2w-B2w", "A2w-C2w", "B2w-C2w", 
+                  "B2w-A2w", "C2w-A2w", "C2w-B2w",
+                  "A4w-B4w", "A4w-C4w", "B4w-C4w", 
+                  "B4w-A4w", "C4w-A4w", "C4w-B4w", 
+                  "A8w-B8w", "A8w-C8w", "B8w-C8w", 
+                  "B8w-A8w", "C8w-A8w", "C8w-B8w",
+                  "A1yr-B1yr", "A1yr-C1yr", "B1yr-C1yr", 
+                  "B1yr-A1yr", "C1yr-A1yr", "C1yr-B1yr",
+                  "A2yr-B2yr", "A2yr-C2yr", "B2yr-C2yr",
+                  "B2yr-A2yr", "C2yr-A2yr", "C2yr-B2yr", "1")) %>% 
+  distinct() %>% 
+  spread(key=label, value=pval) %>% 
+  separate(origin, c("amplicon", "Type", "variable", "beta", "test", "filetype"), by=c(".","_")) %>% 
+  write_tsv("results/permdisp_OTU_results.txt", col_names=TRUE)
+```
+
+# Model 2: Milk production efficiency
+2yr samples only, averaged 3 consecutive rumen samples to avoid animal effects  
+Effic + MPE
+
+* Permutational ANOVA (PERMANOVA) followed by pairwise PERMANOVA with FDR correction (Benjamini-Hochberg method) if significant
+
+## Archaea
+### Fecal
+Subset data to 2yr fecal samples
+```{r}
+## Metadata
+meta.temp = metaAave %>%
+  filter(Type == "F" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaAave %>%
+  # Combine with metadata
+  select(Sample, AgeGroup, Type) %>% 
+  right_join(OTUAave, by="Sample") %>%
+  # Filter to only 2 yr fecal samples
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  # Remove metadata variables
+  select(-Sample, -AgeGroup, -Type)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+### Rumen liquids
+Subset data to 2yr rumen liquid samples
+```{r}
+## Metadata
+meta.temp = metaAave %>%
+  # Efficieny 
+  filter(Type == "L" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaAave %>%
+  # Combine with metadata
+  select(Sample, AgeGroup, Type) %>% 
+  right_join(OTUAave, by="Sample") %>%
+  # Filter to only 2 yr fecal samples
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  # Remove metadata variables
+  select(-Sample, -AgeGroup, -Type)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+### Rumen solids
+Subset data to 2yr rumen solid samples
+```{r}
+## Metadata
+meta.temp = metaAave %>%
+  # Efficieny 
+  filter(Type == "S" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaAave %>%
+  # Combine with metadata
+  select(Sample, AgeGroup, Type) %>% 
+  right_join(OTUAave, by="Sample") %>%
+  # Filter to only 2 yr fecal samples
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  # Remove metadata variables
+  select(-Sample, -AgeGroup, -Type)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+## Bacteria
+### Fecal
+Subset data to 2yr fecal samples
+```{r}
+## Metadata
+meta.temp = metaBave %>%
+  filter(Type == "F" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaBave %>%
+  # Combine with metadata
+  select(Sample, AgeGroup, Type) %>% 
+  right_join(OTUBave, by="Sample") %>%
+  # Filter to only 2 yr fecal samples
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  # Remove metadata variables
+  select(-Sample, -AgeGroup, -Type)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+### Rumen liquids
+Subset data to 2yr rumen liquid samples
+```{r}
+## Metadata
+meta.temp = metaBave %>%
+  # Efficieny 
+  filter(Type == "L" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaBave %>%
+  # Combine with metadata
+  select(Sample, AgeGroup, Type) %>% 
+  right_join(OTUBave, by="Sample") %>%
+  # Filter to only 2 yr fecal samples
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  # Remove metadata variables
+  select(-Sample, -AgeGroup, -Type)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+### Rumen solids
+Subset data to 2yr rumen solid samples
+```{r}
+## Metadata
+meta.temp = metaBave %>%
+  # Efficieny 
+  filter(Type == "S" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaBave %>%
+  # Combine with metadata
+  select(Sample, AgeGroup, Type) %>% 
+  right_join(OTUBave, by="Sample") %>%
+  # Filter to only 2 yr fecal samples
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  # Remove metadata variables
+  select(-Sample, -AgeGroup, -Type)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+## Fungi
+### Fecal
+Subset data to 2yr fecal samples
+```{r}
+## Metadata
+meta.temp = metaFave %>%
+  filter(Type == "F" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaFave %>%
+  # Combine with metadata
+  select(Sample, AgeGroup, Type) %>% 
+  right_join(OTUFave, by="Sample") %>%
+  # Filter to only 2 yr fecal samples
+  filter(Type == "F" & AgeGroup == "2yr") %>% 
+  # Remove metadata variables
+  select(-Sample, -AgeGroup, -Type)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+### Rumen liquids
+Subset data to 2yr rumen liquid samples
+```{r}
+## Metadata
+meta.temp = metaFave %>%
+  # Efficieny 
+  filter(Type == "L" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaFave %>%
+  # Combine with metadata
+  select(Sample, AgeGroup, Type) %>% 
+  right_join(OTUFave, by="Sample") %>%
+  # Filter to only 2 yr fecal samples
+  filter(Type == "L" & AgeGroup == "2yr") %>% 
+  # Remove metadata variables
+  select(-Sample, -AgeGroup, -Type)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+### Rumen solids
+Subset data to 2yr rumen solid samples
+```{r}
+## Metadata
+meta.temp = metaFave %>%
+  # Efficieny 
+  filter(Type == "S" & AgeGroup == "2yr")
+```
+
+```{r}
+OTU.temp = metaFave %>%
+  # Combine with metadata
+  select(Sample, AgeGroup, Type) %>% 
+  right_join(OTUFave, by="Sample") %>%
+  # Filter to only 2 yr fecal samples
+  filter(Type == "S" & AgeGroup == "2yr") %>% 
+  # Remove metadata variables
+  select(-Sample, -AgeGroup, -Type)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ Effic+MPE, data=meta.temp, method="jaccard", permutations=1000)
+```
+
+# Model 3: Calf scours
+2- and 4-week samples only, stratify by AgeGroup   ScourSample (Y/N)
+
+* Permutational ANOVA (PERMANOVA) followed by pairwise PERMANOVA with FDR correction (Benjamini-Hochberg method) if significant
+
+```{r}
+set.seed(6926)
+```
+
+## Archaea
+### Fecal
+Subset data
+```{r}
+meta.temp = metaA %>%
+  filter(Type == "F") %>% 
+  filter(AgeGroup %in% c("2w", "4w"))
+```
+
+```{r}
+OTU.temp = metaA %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "F") %>% 
+  filter(AgeGroup %in% c("2w", "4w")) %>% 
+  left_join(OTUA, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**PERMANOVA** 
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ ScourSample, data=meta.temp, strata=meta.temp$AgeGroup, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ ScourSample, data=meta.temp, strata=meta.temp$AgeGroup, method="jaccard", permutations=1000)
+```
+
+## Bacteria
+### Fecal
+Subset data
+```{r}
+meta.temp = metaB %>%
+  filter(Type == "F") %>% 
+  filter(AgeGroup %in% c("2w", "4w"))
+```
+
+```{r}
+OTU.temp = metaB %>%
+  select(Sample, Type, AgeGroup) %>% 
+  filter(Type == "F") %>% 
+  filter(AgeGroup %in% c("2w", "4w")) %>% 
+  left_join(OTUB, by="Sample") %>% 
+  select(-Sample, -Type, -AgeGroup)
+```
+
+**PERMANOVA**  
+Bray-Curtis (structure)
+```{r}
+adonis(OTU.temp ~ ScourSample, data=meta.temp, strata=meta.temp$AgeGroup, method="bray", permutations=1000)
+```
+
+Jaccard (composition)
+```{r}
+adonis(OTU.temp ~ ScourSample, data=meta.temp, strata=meta.temp$AgeGroup, method="jaccard", permutations=1000)
+```
+
+## Fungi
+No fecal samples due to low abundance in young calves.
