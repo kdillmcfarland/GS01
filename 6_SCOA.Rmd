@@ -323,3 +323,132 @@ p.adjust(c(4.43E-12,0.00000127,0.00203,1.24E-11,2E-16), method="fdr")
 #Diet:AgeGroup
 p.adjust(c(0.0506,0.101,0.49988,0.00031,0.0257), method="fdr")
 ```
+
+## Model 2: Milk production efficiency
+2yr samples only, averaged 3 consecutive rumen samples to avoid animal effects  
+Effic + MPE
+
+* ANOVA mask of GLM
+
+### Combine data
+Add milk production metrics to SCOA and VFA tables
+```{r}
+VFA.temp = VFAave %>% 
+  mutate(Sample = paste(Sample, "1", sep="")) %>% 
+  left_join(metaB[,c("Sample","Effic","MPE")], by="Sample") %>% 
+  filter(!(is.na(MPE)))
+
+SCOA.temp = SCOAave %>% 
+  mutate(Sample = paste(Sample, "1", sep="")) %>% 
+  left_join(metaB[,c("Sample","Effic","MPE")], by="Sample") %>% 
+  filter(!(is.na(MPE)))
+```
+
+### Total VFA
+acetate + propionate + isobutyrate + butyrate, isovalerate + 2-methylbutyrate + valerate
+
+**Concentration**
+```{r}
+summary(aov(VFA_total_mM ~ Effic + MPE, data=VFA.temp))
+```
+
+### Total branched
+isobutyrate + isovalerate + 2-methylbutyrate
+
+**Concentration**
+```{r}
+summary(aov(branch_mM ~ Effic + MPE, data=VFA.temp))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(branch_mF ~ Effic + MPE, data=VFA.temp))
+```
+
+### Acetate
+**Concentration**
+```{r}
+summary(aov(Acetate ~ Effic + MPE, data=SCOA.temp))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(Acetate_mF ~ Effic + MPE, data=VFA.temp))
+```
+
+### Butyrate
+**Concentration**
+```{r}
+summary(aov(Butyrate ~ Effic + MPE, data=SCOA.temp))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(Butyrate_mF ~ Effic + MPE, data=VFA.temp))
+```
+
+### Ethanol
+Does not occur in 2 year samples.
+
+### Formate
+Does not occur in 2 year samples.
+
+### Isobutyrate
+**Concentration**
+```{r}
+summary(aov(Isobutyrate ~ Effic + MPE, data=SCOA.temp))
+```
+
+### Isovalerate + 2-methylbutyrate
+**Concentration**
+```{r}
+summary(aov(iVal.2MB ~ Effic + MPE, data=SCOA.temp))
+```
+
+### Lactate
+**Concentration**
+Does not occur in 2 year samples.
+
+### Propionate
+**Concentration**
+```{r}
+summary(aov(Propionate ~ Effic + MPE, data=SCOA.temp))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(Propionate_mF ~ Effic + MPE, data=VFA.temp))
+```
+
+### Succinate
+**Concentration**
+```{r}
+summary(aov(Succinate ~ Effic + MPE, data=SCOA.temp))
+```
+
+### Valerate
+**Concentration**
+```{r}
+summary(aov(Valerate ~ Effic + MPE, data=SCOA.temp))
+```
+
+**Molar fraction**
+```{r}
+summary(aov(Valerate_mF ~ Effic + MPE, data=VFA.temp))
+```
+
+### mM FDR correction
+```{r}
+#Effic
+p.adjust(c(0.636,0.4315,NA,NA,0.1424,0.264,NA,0.703,0.563,0.825,0.711), method="fdr")
+#MPE
+p.adjust(c(0.126,0.0931,NA,NA,0.0103,0.354,NA,0.597,0.746,0.809,0.262), method="fdr")
+```
+
+### mF FDR  correction
+```{r}
+#Effic
+p.adjust(c(0.3,0.604,0.475,0.364,1), method="fdr")
+#MPE
+p.adjust(c(0.676,0.908,0.994,0.459,0.915), method="fdr")
+```

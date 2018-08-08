@@ -230,7 +230,7 @@ div.tocify {
 <h1 class="title toc-ignore">SCOA analyses</h1>
 <h3 class="subtitle"><em>GS01 Calf diets</em></h3>
 <h4 class="author"><em>Kim Dill-McFarland</em></h4>
-<h4 class="date"><em>version August 04, 2018</em></h4>
+<h4 class="date"><em>version August 07, 2018</em></h4>
 
 </div>
 
@@ -259,12 +259,12 @@ library(vegan)</code></pre>
 <pre><code>## This is vegan 2.5-2</code></pre>
 <pre class="r"><code>#Data manipulation
 library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ──────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 2.2.1     ✔ purrr   0.2.5
 ## ✔ tibble  1.4.2     ✔ dplyr   0.7.5
 ## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
 ## ✔ readr   1.1.1     ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ─────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ───────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 </div>
@@ -1608,6 +1608,176 @@ p.adjust(c(4.43E-12,0.00000127,0.00203,1.24E-11,2E-16), method=&quot;fdr&quot;)<
 <pre class="r"><code>#Diet:AgeGroup
 p.adjust(c(0.0506,0.101,0.49988,0.00031,0.0257), method=&quot;fdr&quot;)</code></pre>
 <pre><code>## [1] 0.08433333 0.12625000 0.49988000 0.00155000 0.06425000</code></pre>
+</div>
+</div>
+<div id="model-2-milk-production-efficiency-1" class="section level2">
+<h2>Model 2: Milk production efficiency</h2>
+<p>2yr samples only, averaged 3 consecutive rumen samples to avoid animal effects<br />
+Effic + MPE</p>
+<ul>
+<li>ANOVA mask of GLM</li>
+</ul>
+<div id="combine-data" class="section level3">
+<h3>Combine data</h3>
+<p>Add milk production metrics to SCOA and VFA tables</p>
+<pre class="r"><code>VFA.temp = VFAave %&gt;% 
+  mutate(Sample = paste(Sample, &quot;1&quot;, sep=&quot;&quot;)) %&gt;% 
+  left_join(metaB[,c(&quot;Sample&quot;,&quot;Effic&quot;,&quot;MPE&quot;)], by=&quot;Sample&quot;) %&gt;% 
+  filter(!(is.na(MPE)))
+
+SCOA.temp = SCOAave %&gt;% 
+  mutate(Sample = paste(Sample, &quot;1&quot;, sep=&quot;&quot;)) %&gt;% 
+  left_join(metaB[,c(&quot;Sample&quot;,&quot;Effic&quot;,&quot;MPE&quot;)], by=&quot;Sample&quot;) %&gt;% 
+  filter(!(is.na(MPE)))</code></pre>
+</div>
+<div id="total-vfa-1" class="section level3">
+<h3>Total VFA</h3>
+<p>acetate + propionate + isobutyrate + butyrate, isovalerate + 2-methylbutyrate + valerate</p>
+<p><strong>Concentration</strong></p>
+<pre class="r"><code>summary(aov(VFA_total_mM ~ Effic + MPE, data=VFA.temp))</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Effic        1     88    88.0   0.052  0.825
+## MPE          1    105   105.1   0.062  0.809
+## Residuals    9  15219  1691.0</code></pre>
+</div>
+<div id="total-branched-1" class="section level3">
+<h3>Total branched</h3>
+<p>isobutyrate + isovalerate + 2-methylbutyrate</p>
+<p><strong>Concentration</strong></p>
+<pre class="r"><code>summary(aov(branch_mM ~ Effic + MPE, data=VFA.temp))</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Effic        1   0.19   0.187   0.039  0.847
+## MPE          1   0.22   0.225   0.047  0.833
+## Residuals    9  42.89   4.766</code></pre>
+<p><strong>Molar fraction</strong></p>
+<pre class="r"><code>summary(aov(branch_mF ~ Effic + MPE, data=VFA.temp))</code></pre>
+<pre><code>##             Df    Sum Sq   Mean Sq F value Pr(&gt;F)
+## Effic        1 0.0000201 2.015e-05   0.289  0.604
+## MPE          1 0.0000010 9.900e-07   0.014  0.908
+## Residuals    9 0.0006273 6.970e-05</code></pre>
+</div>
+<div id="acetate-1" class="section level3">
+<h3>Acetate</h3>
+<p><strong>Concentration</strong></p>
+<pre class="r"><code>summary(aov(Acetate ~ Effic + MPE, data=SCOA.temp))</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Effic        1   39.9    39.9   0.240  0.636
+## MPE          1  472.0   472.0   2.838  0.126
+## Residuals    9 1496.6   166.3</code></pre>
+<p><strong>Molar fraction</strong></p>
+<pre class="r"><code>summary(aov(Acetate_mF ~ Effic + MPE, data=VFA.temp))</code></pre>
+<pre><code>##             Df   Sum Sq   Mean Sq F value Pr(&gt;F)
+## Effic        1 0.001329 0.0013289   1.209  0.300
+## MPE          1 0.000204 0.0002045   0.186  0.676
+## Residuals    9 0.009889 0.0010988</code></pre>
+</div>
+<div id="butyrate-1" class="section level3">
+<h3>Butyrate</h3>
+<p><strong>Concentration</strong></p>
+<pre class="r"><code>summary(aov(Butyrate ~ Effic + MPE, data=SCOA.temp))</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)  
+## Effic        1   5.80   5.800   0.678 0.4315  
+## MPE          1  30.18  30.175   3.528 0.0931 .
+## Residuals    9  76.98   8.553                 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+<p><strong>Molar fraction</strong></p>
+<pre class="r"><code>summary(aov(Butyrate_mF ~ Effic + MPE, data=VFA.temp))</code></pre>
+<pre><code>##             Df    Sum Sq   Mean Sq F value Pr(&gt;F)
+## Effic        1 0.0001554 1.554e-04   0.555  0.475
+## MPE          1 0.0000000 2.000e-08   0.000  0.994
+## Residuals    9 0.0025181 2.798e-04</code></pre>
+</div>
+<div id="ethanol-1" class="section level3">
+<h3>Ethanol</h3>
+<p>Does not occur in 2 year samples.</p>
+</div>
+<div id="formate-1" class="section level3">
+<h3>Formate</h3>
+<p>Does not occur in 2 year samples.</p>
+</div>
+<div id="isobutyrate-1" class="section level3">
+<h3>Isobutyrate</h3>
+<p><strong>Concentration</strong></p>
+<pre class="r"><code>summary(aov(Isobutyrate ~ Effic + MPE, data=SCOA.temp))</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)  
+## Effic        1 0.1123  0.1123   2.584 0.1424  
+## MPE          1 0.4532  0.4532  10.429 0.0103 *
+## Residuals    9 0.3912  0.0435                 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+<div id="isovalerate-2-methylbutyrate-1" class="section level3">
+<h3>Isovalerate + 2-methylbutyrate</h3>
+<p><strong>Concentration</strong></p>
+<pre class="r"><code>summary(aov(iVal.2MB ~ Effic + MPE, data=SCOA.temp))</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Effic        1  1.817   1.817   1.418  0.264
+## MPE          1  1.226   1.226   0.957  0.354
+## Residuals    9 11.534   1.282</code></pre>
+</div>
+<div id="lactate-1" class="section level3">
+<h3>Lactate</h3>
+<p><strong>Concentration</strong> Does not occur in 2 year samples.</p>
+</div>
+<div id="propionate-1" class="section level3">
+<h3>Propionate</h3>
+<p><strong>Concentration</strong></p>
+<pre class="r"><code>summary(aov(Propionate ~ Effic + MPE, data=SCOA.temp))</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Effic        1    5.6    5.60   0.155  0.703
+## MPE          1   10.9   10.89   0.301  0.597
+## Residuals    9  325.9   36.21</code></pre>
+<p><strong>Molar fraction</strong></p>
+<pre class="r"><code>summary(aov(Propionate_mF ~ Effic + MPE, data=VFA.temp))</code></pre>
+<pre><code>##             Df   Sum Sq   Mean Sq F value Pr(&gt;F)
+## Effic        1 0.000380 0.0003802   0.915  0.364
+## MPE          1 0.000249 0.0002489   0.599  0.459
+## Residuals    9 0.003739 0.0004155</code></pre>
+</div>
+<div id="succinate-1" class="section level3">
+<h3>Succinate</h3>
+<p><strong>Concentration</strong></p>
+<pre class="r"><code>summary(aov(Succinate ~ Effic + MPE, data=SCOA.temp))</code></pre>
+<pre><code>##             Df   Sum Sq   Mean Sq F value Pr(&gt;F)
+## Effic        1 0.000418 0.0004178   0.361  0.563
+## MPE          1 0.000129 0.0001287   0.111  0.746
+## Residuals    9 0.010404 0.0011560</code></pre>
+</div>
+<div id="valerate-1" class="section level3">
+<h3>Valerate</h3>
+<p><strong>Concentration</strong></p>
+<pre class="r"><code>summary(aov(Valerate ~ Effic + MPE, data=SCOA.temp))</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Effic        1 0.0317 0.03168   0.146  0.711
+## MPE          1 0.3101 0.31011   1.430  0.262
+## Residuals    9 1.9517 0.21686</code></pre>
+<p><strong>Molar fraction</strong></p>
+<pre class="r"><code>summary(aov(Valerate_mF ~ Effic + MPE, data=VFA.temp))</code></pre>
+<pre><code>##             Df    Sum Sq   Mean Sq F value Pr(&gt;F)
+## Effic        1 0.000e+00 0.000e+00   0.000  1.000
+## MPE          1 1.300e-07 1.280e-07   0.012  0.915
+## Residuals    9 9.667e-05 1.074e-05</code></pre>
+</div>
+<div id="mm-fdr-correction-1" class="section level3">
+<h3>mM FDR correction</h3>
+<pre class="r"><code>#Effic
+p.adjust(c(0.636,0.4315,NA,NA,0.1424,0.264,NA,0.703,0.563,0.825,0.711), method=&quot;fdr&quot;)</code></pre>
+<pre><code>##  [1] 0.8125714 0.8125714        NA        NA 0.8125714 0.8125714        NA
+##  [8] 0.8125714 0.8125714 0.8250000 0.8125714</code></pre>
+<pre class="r"><code>#MPE
+p.adjust(c(0.126,0.0931,NA,NA,0.0103,0.354,NA,0.597,0.746,0.809,0.262), method=&quot;fdr&quot;)</code></pre>
+<pre><code>##  [1] 0.3360 0.3360     NA     NA 0.0824 0.5664     NA 0.7960 0.8090 0.8090
+## [11] 0.5240</code></pre>
+</div>
+<div id="mf-fdr-correction-1" class="section level3">
+<h3>mF FDR correction</h3>
+<pre class="r"><code>#Effic
+p.adjust(c(0.3,0.604,0.475,0.364,1), method=&quot;fdr&quot;)</code></pre>
+<pre><code>## [1] 0.755 0.755 0.755 0.755 1.000</code></pre>
+<pre class="r"><code>#MPE
+p.adjust(c(0.676,0.908,0.994,0.459,0.915), method=&quot;fdr&quot;)</code></pre>
+<pre><code>## [1] 0.994 0.994 0.994 0.994 0.994</code></pre>
 </div>
 </div>
 </div>
