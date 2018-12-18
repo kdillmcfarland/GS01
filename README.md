@@ -1,5 +1,15 @@
-# Diet influences early microbiota development in dairy calves without long-term impacts on milk production
-Study ID: GS01, U. of Wisconsin-Madison
+# GS01, U. of Wisconsin-Madison
+Analyses associated with
+
+> Dill-McFarland KA, Weimer PJ, Breaker JD, Suen G. 2018. Diet influences early microbiota development in dairy calves without long-term impacts on milk production. *Appl Environ Microbiol* Epub ahead of print. doi: [10.1128/AEM.02141-18](https://aem.asm.org/content/early/2018/10/23/AEM.02141-18).
+
+## Abstract
+Gastrointestinal tract (GIT) microorganisms play important roles in the health of ruminant livestock and impact production of agriculturally relevant products, including milk and meat. Despite this link, interventions to alter the adult microbiota to improve production have proven ineffective as established microbial communities are resilient to change. In contrast, developing communities in young animals may be more easily altered but are less well-studied. Here, we measured the GIT-associated microbiota of 45 Holstein dairy cows from 2 weeks to first lactation using Illumina amplicon sequencing of bacterial (V4 16S), archaeal (V6-8 16S), and fungal (ITS1) communities. Fecal and rumen microbiota of cows raised on calf starter grains and/or corn silage were correlated to lifetime growth as well as milk production during the first lactation cycle in order to determine if early-life diets have long-term impacts. Significant diet-associated differences in total microbial communities and specific taxa were observed by weaning (8 weeks), but all animals reached an adult-like composition between weaning and 1-year. While some calf diet-driven differences were apparent in the microbiota of adult cows, these dissimilarities did not correlate with animal growth or milk production. This suggests that initial microbial community establishment is impacted by early-life diet, but post-weaning factors have a greater influence on adult communities and production outcomes.
+
+## Significance
+The gut microbiota is essential to the survival of many organisms, including ruminants that rely on microorganisms for nutrient acquisition from dietary inputs for the production of products like milk and meat. While alteration of the adult ruminant microbiota to improve production is possible, changes are often unstable and fail to persist. In contrast, the early-life microbiota may be more amenable to sustained modification. However, few studies have determined the impacts of early-life interventions on downstream production. Here, we investigated the impacts of agriculturally relevant calf diets, including calf starter and corn silage, on gut microbial communities, growth, and production through the first lactation cycle. Thus, this work serves to further our understanding of early-life microbiota acquisition as well as informs future practices in livestock management.
+
+PMID: 30367001
 
 ## Key
 
